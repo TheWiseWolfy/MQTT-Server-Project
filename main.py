@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets # import PyQt5 widgets
 import sys
 
+
 # Create the application object
 app = QtWidgets.QApplication(sys.argv)
 
