@@ -6,7 +6,7 @@ import threading
 
 HEADER = 64
 PORT = 5050
-SERVER_IP = "192.168.0.189"
+SERVER_IP = "192.168.0.113"
 ADDR = (SERVER_IP, PORT);
 
 FORMAT = 'utf-8'
@@ -33,7 +33,7 @@ def start(server):
     server.listen()
     print(f"[LISTENING] Server is listening on {SERVER_IP}")
     while True:
-        conn ,addr = server.accept()      # This fuction is blocking
+        conn ,addr = server.accept()      # This fuction is BLOKING
         thread = threading.Thread (target=handle_client, args=(conn, addr))
         thread.start()
         print( f"[Active connections]{threading.active_count() - 1}")
