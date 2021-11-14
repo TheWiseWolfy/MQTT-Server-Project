@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="adc64b2c-c5df-46f2-be04-52434051ae3f" name="Changes" comment="Socket interaction is moved on a thread.">
+    <list default="true" id="adc64b2c-c5df-46f2-be04-52434051ae3f" name="Changes" comment="First attepnts at interptreting a fixed header.">
+      <change afterPath="$PROJECT_DIR$/Model/Client.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Model/MQTTServer_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model/MQTTServer_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Model/MQTTServer_test.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Model/Server.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model/Server.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -38,7 +38,7 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../Arhive" />
+    <property name="last_opened_file_path" value="$USER_HOME$/Desktop/pythonProject" />
     <property name="settings.editor.selected.configurable" value="Errors" />
   </component>
   <component name="RunManager" selected="Python.main">
@@ -142,7 +142,14 @@
       <option name="project" value="LOCAL" />
       <updated>1636295197666</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="First attepnts at interptreting a fixed header.">
+      <created>1636883889196</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1636883889196</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -161,6 +168,7 @@
     <MESSAGE value="minor changes" />
     <MESSAGE value="First socket implementation." />
     <MESSAGE value="Socket interaction is moved on a thread." />
-    <option name="LAST_COMMIT_MESSAGE" value="Socket interaction is moved on a thread." />
+    <MESSAGE value="First attepnts at interptreting a fixed header." />
+    <option name="LAST_COMMIT_MESSAGE" value="First attepnts at interptreting a fixed header." />
   </component>
 </project>

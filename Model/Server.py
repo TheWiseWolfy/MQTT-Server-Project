@@ -2,10 +2,11 @@ import socket
 import sys
 import threading
 
+from Model.FIxedHeader import ProcessFixedHeader
+
 FORMAT = 'utf-8'
 FIXED_HEADER = 16
 DISCONNECT_MESSAGE = "!DISCONNECT"
-
 
 class MQTTServer:
     header = 64
@@ -55,12 +56,15 @@ class MQTTServer:
 
         clintConnected = True;
 
+        # here we handle individual messages
         while clintConnected:
             # Initial fixed header interaction
             fixedHeader = conn.recv(FIXED_HEADER)
 
-            print(f"\n{fixedHeader}");
-            ProcessFixedHeader(fixedHeader);
+            print(f"\n{fixedHeader}")
+
+            # Here we process the fixed header.
+            ProcessFixedHeader(fixedHeader)
 
             # What we do after that, only god will know
             # msg_length:
@@ -77,9 +81,3 @@ class MQTTServer:
 
         conn.close()
 
-
-# Aici primim bitisori frumosi de la fixed header.
-def ProcessFixedHeader(fixedHeader):
-    print(fixedHeader[0:4])
-
-    pass
