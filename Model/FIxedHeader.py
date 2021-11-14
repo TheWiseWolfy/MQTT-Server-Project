@@ -1,5 +1,3 @@
-
-
 # Aici primim bitisori frumosi de la fixed header.
 def ProcessFixedHeader(fixedHeader):
     print(fixedHeader[0:4])
@@ -21,10 +19,48 @@ def ProcessFixedHeader(fixedHeader):
         b'1110': DISCONNECT,  # 14
     }
 
-    func = switcher.get(fixedHeader[0:4], ERROR)  # Here we pick a fuction for processing the pachet type
-    func() # Execute the function
+    func = switcher.get(fixedHeader[0:4], ERROR)  # Here we pick a function for processing the packet type
+    func()  # Execute the function
 
     return 0
+
+
+def RL_Encode(x):
+    while True:
+        encodedByte = x % 128
+        x = x / 128
+        if x > 0:
+            encodedByte = encodedByte | 128
+        res = encodedByte
+        if x < 0:
+            break
+    return res
+
+
+def RL_Decode(conn):
+    multiplier = 1
+    res = 0
+    while True:
+        encodedByte = to_int(conn.recv(8))
+        print(f"\n{encodedByte}")
+        res += (encodedByte & 127) * multiplier
+        multiplier *= 128
+        if multiplier > 128 * 128 * 128:
+            raise Exception("Malformed Remaining Length")
+        if encodedByte & 128 == 0:
+            break
+    return res
+
+def to_int(x):
+    enc=x.decode('utf-8')
+    aux=128
+    res=0
+    for i in range(7,0,-1):
+        if enc[i]=='1':
+            res+=aux
+        aux/=2
+    return int(res)
+
 
 
 def ERROR():
@@ -33,7 +69,6 @@ def ERROR():
 
 def CONNECT():
     print("CONNECT")
-
 
 def CONNACK():
     print("CONNACK")
@@ -72,16 +107,16 @@ def UNSUBSCRIBE():
 
 
 def UNSUBACK():
-    print("UNSUBACK");
+    print("UNSUBACK")
 
 
 def PINGREQ():
-    print("PINGREQ");
+    print("PINGREQ")
 
 
 def PINGRESP():
-    print("PINGRESP");
+    print("PINGRESP")
 
 
 def DISCONNECT():
-    print("DISCONNECT");
+    print("DISCONNECT")
