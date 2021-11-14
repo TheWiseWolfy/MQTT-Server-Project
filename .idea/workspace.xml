@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="adc64b2c-c5df-46f2-be04-52434051ae3f" name="Changes" comment="First socket implementation.">
-      <change afterPath="$PROJECT_DIR$/Model/Server.py" afterDir="false" />
+    <list default="true" id="adc64b2c-c5df-46f2-be04-52434051ae3f" name="Changes" comment="Socket interaction is moved on a thread.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Model/MQTTServer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model/MQTTServer_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Model/MQTTServer_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model/MQTTServer_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Model/Server.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model/Server.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -38,9 +39,9 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../Arhive" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="settings.editor.selected.configurable" value="Errors" />
   </component>
-  <component name="RunManager" selected="Python.Server">
+  <component name="RunManager" selected="Python.main">
     <configuration name="MQTTServer_test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="MQTT-Server-Project" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -134,7 +135,14 @@
       <option name="project" value="LOCAL" />
       <updated>1636143004943</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Socket interaction is moved on a thread.">
+      <created>1636295197666</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1636295197666</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -152,6 +160,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="minor changes" />
     <MESSAGE value="First socket implementation." />
-    <option name="LAST_COMMIT_MESSAGE" value="First socket implementation." />
+    <MESSAGE value="Socket interaction is moved on a thread." />
+    <option name="LAST_COMMIT_MESSAGE" value="Socket interaction is moved on a thread." />
   </component>
 </project>
