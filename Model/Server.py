@@ -2,7 +2,7 @@ import socket
 import sys
 import threading
 
-from Model.FIxedHeader import ProcessFixedHeader
+from Model.FIxedHeader import ProcessFixedHeader, RL_Decode
 
 FORMAT = 'utf-8'
 FIXED_HEADER = 16
@@ -12,9 +12,9 @@ class MQTTServer:
     header = 64
     port = 1883  # Default MQTT Port
 
-    serverIP = 0;
-    clientSpckets = list()  # A list of connected clients
-    serverSocket = None  # The socjet used for this server in particular
+    serverIP = 0
+    clientSockets = list()  # A list of connected clients
+    serverSocket = None  # The socket used for this server in particular
 
     def __init__(self):
         # Figure out primary ip of the machine. Will fail if weird network adapters are not turned off.
@@ -42,27 +42,28 @@ class MQTTServer:
         while True:
             conn, addr = self.serverSocket.accept()  # This fuction is BLOKING
             print(f"Client on adress {addr} successfully connected.")
-            self.clientSpckets.append(conn)
+            self.clientSockets.append(conn)
 
             # Here we start observing the incomming messages from the client
             thread = threading.Thread(target=self.handle_client, args=(conn, addr))
             thread.start()
 
-            print(self.clientSpckets)
+            print(self.clientSockets)
 
     # What we do when we have a new connection
     def handle_client(self, conn, addr):
         print(f"[NEW CONNECTION ]{addr} connected.")
 
-        clintConnected = True;
+        clientConnected = True
 
         # here we handle individual messages
-        while clintConnected:
+        while clientConnected:
             # Initial fixed header interaction
-            fixedHeader = conn.recv(FIXED_HEADER)
+            fixedHeader = conn.recv(8)
 
             print(f"\n{fixedHeader}")
 
+            print(f"{RL_Decode(conn)}")
             # Here we process the fixed header.
             ProcessFixedHeader(fixedHeader)
 

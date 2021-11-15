@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="adc64b2c-c5df-46f2-be04-52434051ae3f" name="Changes" comment="First attepnts at interptreting a fixed header.">
-      <change afterPath="$PROJECT_DIR$/Model/Client.py" afterDir="false" />
+    <list default="true" id="adc64b2c-c5df-46f2-be04-52434051ae3f" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/MQTT-Server-Project.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/MQTT-Server-Project.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Model/MQTTServer_test.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Model/FIxedHeader.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model/FIxedHeader.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Model/Server.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model/Server.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -20,7 +21,13 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="UPDATE_TYPE" value="REBASE" />
   </component>
   <component name="GitSEFilterConfiguration">
     <file-type-list>
@@ -157,7 +164,19 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="Petrisor{Danger]" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
           </value>
         </entry>
       </map>
@@ -170,5 +189,21 @@
     <MESSAGE value="Socket interaction is moved on a thread." />
     <MESSAGE value="First attepnts at interptreting a fixed header." />
     <option name="LAST_COMMIT_MESSAGE" value="First attepnts at interptreting a fixed header." />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="PythonConfigurationType">
+        <watch expression="encodedByte[3]" language="Python" />
+      </configuration>
+    </watches-manager>
   </component>
 </project>
