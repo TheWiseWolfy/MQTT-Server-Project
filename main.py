@@ -19,13 +19,16 @@ def initInterface():
     sys.exit(app.exec())
 
 def main() -> int:
-    MQTTServer()
+    server = MQTTServer()
 
-    initInterface()
+   # initInterface()
 
     while (True):
-        print("Say cheese")
-        time.sleep(3)
+        input1 = input()
+        if input1 == 's':
+            server.serverISKill()
+            break
+
 
     return 0
 

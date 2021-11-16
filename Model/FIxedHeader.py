@@ -25,41 +25,6 @@ def ProcessFixedHeader(fixedHeader):
     return 0
 
 
-def RL_Encode(x):
-    while True:
-        encodedByte = x % 128
-        x = x / 128
-        if x > 0:
-            encodedByte = encodedByte | 128
-        res = encodedByte
-        if x < 0:
-            break
-    return res
-
-
-def RL_Decode(conn):
-    multiplier = 1
-    res = 0
-    while True:
-        encodedByte = to_int(conn.recv(8))
-        print(f"\n{encodedByte}")
-        res += (encodedByte & 127) * multiplier
-        multiplier *= 128
-        if multiplier > 128 * 128 * 128:
-            raise Exception("Malformed Remaining Length")
-        if encodedByte & 128 == 0:
-            break
-    return res
-
-def to_int(x):
-    enc=x.decode('utf-8')
-    aux=128
-    res=0
-    for i in range(7,0,-1):
-        if enc[i]=='1':
-            res+=aux
-        aux/=2
-    return int(res)
 
 
 
