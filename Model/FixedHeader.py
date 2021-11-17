@@ -1,6 +1,6 @@
 # Aici primim bitisori frumosi de la fixed header.
-def ProcessFixedHeader(fixedHeader):
-   # print(fixedHeader[0:4])
+def ProcessFixedHeader(client):
+    fixedHeader = client.socket.recv(8)
 
     switcher = {
         b'0001': CONNECT,  # 1
@@ -24,8 +24,47 @@ def ProcessFixedHeader(fixedHeader):
 
     return 0
 
+def RL_Decode(client):
+    res = 0
+
+    multiplier = 1
+    while True:
+        bytes = client.socket.recv(8)
+        encodedByte = to_int(bytes)
+        #print(f"\n{encodedByte}")
+
+        res += (encodedByte & 127) * multiplier
+        multiplier *= 128
+        if multiplier > 128 * 128 * 128:
+            raise Exception("Malformed Remaining Length")
+        if encodedByte & 128 == 0:
+            break
+    return res
+
+# def RL_Encode(x):
+#     while True:
+#         encodedByte = x % 128
+#         x = x / 128
+#         if x > 0:
+#             encodedByte = encodedByte | 128
+#         res = encodedByte
+#         if x < 0:
+#             break
+#     return res
 
 
+def to_int(x):
+    enc=x.decode('utf-8')
+    aux=128
+    res=0
+    for i in range(0,8):
+        if enc[i]=='1':
+            res+=aux
+        aux = aux /2
+    return int(res)
+
+
+#We do driffrent things based on diffrent types
 
 
 def ERROR():
@@ -85,3 +124,4 @@ def PINGRESP():
 
 def DISCONNECT():
     print("DISCONNECT")
+

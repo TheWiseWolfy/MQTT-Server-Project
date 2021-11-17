@@ -1,8 +1,8 @@
 import socket
-import sys
 import threading
 
 from Model.Client import Client
+from Model.Tools import bcolors
 
 FORMAT = 'utf-8'
 FIXED_HEADER = 16
@@ -97,7 +97,7 @@ class MQTTServer:
         client.socket.close()
         print(f"Thead for client {client.adress} has quit.")
 
-    # This is stupid and wrong and should have not been written
+    # This is probably stupid, can't say tho.
     def serverISKill(self):
         for client in self.clients:
             client.socket.close()
@@ -105,14 +105,3 @@ class MQTTServer:
 
         self.serverSocket.close()
 
-
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
