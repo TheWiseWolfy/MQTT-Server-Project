@@ -12,15 +12,18 @@ class Client:
     def ReadMQTTPackage(self):
         fixedHeader = self.socket.recv(8)
 
-        print(f"\nThe fixed header is: {fixedHeader}")
+        print(f"The fixed header is: {fixedHeader}")
         ProcessFixedHeader(fixedHeader)
 
         #Only needs exatly as much as it needs
         remainingLenght = RL_Decode(self.socket)
-        print(f"\n The size of the pachage is:{remainingLenght}")
+        print(f" The size of the pachage is:{remainingLenght}")
 
         restOfPachet = self.socket.recv(remainingLenght)
+
+        print(f" The rest of the pachage is:{restOfPachet}")
         return
+
 # def RL_Encode(x):
 #     while True:
 #         encodedByte = x % 128
@@ -40,8 +43,9 @@ def RL_Decode(conn):
     multiplier = 1
     while True:
         brah = conn.recv(8);
+
         encodedByte = to_int(brah)
-        print(f"\n{encodedByte}")
+        #print(f"\n{encodedByte}")
 
         res += (encodedByte & 127) * multiplier
         multiplier *= 128

@@ -1,6 +1,6 @@
 # Aici primim bitisori frumosi de la fixed header.
 def ProcessFixedHeader(fixedHeader):
-    print(fixedHeader[0:4])
+   # print(fixedHeader[0:4])
 
     switcher = {
         b'0001': CONNECT,  # 1
