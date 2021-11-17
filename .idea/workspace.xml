@@ -2,10 +2,15 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="adc64b2c-c5df-46f2-be04-52434051ae3f" name="Changes" comment="Adding a lot of needed expections.">
+      <change afterPath="$PROJECT_DIR$/Model/PacketProcessing.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/MQTT-Server-Project.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/MQTT-Server-Project.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_15_11_2021_11_39__Changes_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_15_11_2021_11_39__Changes_.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Model/Client.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model/Client.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Model/FIxedHeader.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model/FixedHeader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Model/FixedHeader.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model/FixedHeader.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Model/Server.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model/Server.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Model/Tools.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model/Tools.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -134,11 +139,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.Server" />
+        <item itemvalue="Python.QTInterface" />
+        <item itemvalue="Python.MQTTServer_test" />
         <item itemvalue="Python.QTInterface" />
         <item itemvalue="Python.Server" />
-        <item itemvalue="Python.MQTTServer_test" />
-        <item itemvalue="Python.Server" />
-        <item itemvalue="Python.MQTTServer_test" />
       </list>
     </recent_temporary>
   </component>
@@ -236,11 +241,6 @@
           <url>file://$PROJECT_DIR$/main.py</url>
           <line>27</line>
           <option name="timeStamp" value="8" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Model/FixedHeader.py</url>
-          <line>31</line>
-          <option name="timeStamp" value="17" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>

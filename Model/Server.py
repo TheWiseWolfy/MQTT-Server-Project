@@ -35,7 +35,6 @@ class MQTTServer:
 
             # We need a thread for listening for new connections
             serverConnectionsThread = threading.Thread(target=self.start, args=())
-            serverConnectionsThread.daemon = True
             serverConnectionsThread.start()
         except BaseException as err:
             print(f"{bcolors.WARNING} Unexpected {err=}, {type(err)=} is server startup.{bcolors.ENDC}")
@@ -63,7 +62,6 @@ class MQTTServer:
                 newClient = Client(conn, addr)
 
                 newClient.thread = threading.Thread(target=self.handleClient, args=[newClient])
-                newClient.thread.daemon = True
                 newClient.thread.start()
 
                 self.clients.append(newClient)
