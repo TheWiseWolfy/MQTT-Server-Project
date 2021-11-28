@@ -124,4 +124,14 @@ def PINGRESP():
 
 def DISCONNECT():
     print("DISCONNECT")
+    return PacketType.DISCONNECT
 
+def ValidateZero(fh):
+    enc = fh.decode('utf-8')
+    if enc != '0000':
+        raise HeaderException()
+
+def ValidateOne(fh):
+    enc = fh.decode('utf-8')
+    if enc != '0100':
+        raise HeaderException()

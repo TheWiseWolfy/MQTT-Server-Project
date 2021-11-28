@@ -1,6 +1,5 @@
 from PyQt5 import QtWidgets # import PyQt5 widgets
 import sys
-import time
 
 from Model.Server import MQTTServer
 
