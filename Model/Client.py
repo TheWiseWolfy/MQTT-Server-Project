@@ -1,5 +1,5 @@
 from Model.FixedHeader import ProcessFixedHeader, RL_Decode
-
+from Model.PacketProcessing import ToProcess
 
 class Client:
     def __init__(self,conn,addr):
@@ -12,15 +12,18 @@ class Client:
     def ReadMQTTPackage(self):
 
         print(f"The fixed header is: {self.socket}") # Reads 8 bites
-        ProcessFixedHeader(self)
+        type=ProcessFixedHeader(self)
 
-        #Only needs exatly as much as it needs
-        remainingLenght = RL_Decode(self)
-        print(f" The size of the pachage is:{remainingLenght}")
+        #Only needs exactly as much as it needs
+        remainingLength = RL_Decode(self)
+        print(f" The size of the pachage is:{remainingLength}")
 
-        restOfPachet = self.socket.recv(remainingLenght)
+        restOfPacket = self.socket.recv(remainingLength)
 
-        print(f" The rest of the pachage is:{restOfPachet}")
+        print(f" The rest of the pachage is:{restOfPacket}")
+        ToProcess(self,type,restOfPacket)
         return
 
+    def Disconnect(self):
+        print("\nDeconectam pe domnu client")
 
