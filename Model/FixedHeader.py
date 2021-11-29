@@ -1,45 +1,54 @@
-# Aici primim bitisori frumosi de la fixed header.
-def ProcessFixedHeader(client):
-    fixedHeader = client.socket.recv(8)
+from Model.Tools import PacketType
+
+class HeaderException(Exception):
+    def __init__(self, message="Header invalid"):
+        self.message = message
+        super().__init__(self.message)
+
+# Aici primim bitisorii frumosi de la fixed header.
+def ProcessFixedHeader(fixedHeader):
 
     switcher = {
-        b'0001': CONNECT,  # 1
-        b'0010': CONNACK,  # 2
-        b'0011': PUBLISH,  # 3
-        b'0100': PUBACK,  # 4
-        b'0101': PUBREC,  # 5
-        b'0110': PUBREL,  # 6
-        b'0111': PUBCOMP,  # 7
-        b'1000': SUBSCRIBE,  # 8
-        b'1001': SUBACK,  # 9
-        b'1010': UNSUBSCRIBE,  # 10
-        b'1011': UNSUBACK,  # 11
-        b'1100': PINGREQ,  # 12
-        b'1101': PINGRESP,  # 13
-        b'1110': DISCONNECT,  # 14
+        16: CONNECT,  # 1
+        32: CONNACK,  # 2
+        48: PUBLISH,  # 3
+        64: PUBACK,  # 4
+        80: PUBREC,  # 5
+        96: PUBREL,  # 6
+        112: PUBCOMP,  # 7
+        128: SUBSCRIBE,  # 8
+        144: SUBACK,  # 9
+        160: UNSUBSCRIBE,  # 10
+        176: UNSUBACK,  # 11
+        192: PINGREQ,  # 12
+        208: PINGRESP,  # 13
+        224: DISCONNECT,  # 14
     }
 
-    func = switcher.get(fixedHeader[0:4], ERROR)  # Here we pick a function for processing the packet type
-    func()  # Execute the function
+    brah = fixedHeader[0] #0001 0011
+    brah2 = brah & 240 # & 1111 0000  =   0011 0000
+    func = switcher.get(brah2, ERROR)  # Here we pick a function for processing the packet type
 
-    return 0
 
-def RL_Decode(client):
-    res = 0
+    return func(fixedHeader[0]) # Execute the function and return the packet type
 
-    multiplier = 1
-    while True:
-        bytes = client.socket.recv(8)
-        encodedByte = to_int(bytes)
-        #print(f"\n{encodedByte}")
+# def lengthDecode(socket):
+#     res = 0
+#
+#     multiplier = 1
+#     while True:
+#         bytes = socket.recv(8)
+#         encodedByte = int(bytes)
+#         # print(f"\n{encodedByte}")
+#
+#         res += (encodedByte & 127) * multiplier
+#         multiplier *= 128
+#         if multiplier > 128 * 128 * 128:
+#             raise Exception("Malformed Remaining Length")
+#         if encodedByte & 128 == 0:
+#             break
+#     return res
 
-        res += (encodedByte & 127) * multiplier
-        multiplier *= 128
-        if multiplier > 128 * 128 * 128:
-            raise Exception("Malformed Remaining Length")
-        if encodedByte & 128 == 0:
-            break
-    return res
 
 # def RL_Encode(x):
 #     while True:
@@ -53,85 +62,96 @@ def RL_Decode(client):
 #     return res
 
 
-def to_int(x):
-    enc=x.decode('utf-8')
-    aux=128
-    res=0
-    for i in range(0,8):
-        if enc[i]=='1':
-            res+=aux
-        aux = aux /2
-    return int(res)
+# We do different things based on different types
 
 
-#We do driffrent things based on diffrent types
+def ERROR(fh):
+    print("ERROR")
+    raise HeaderException()
 
 
-def ERROR():
+def CONNECT(fh):
+    ValidateZero(fh)
     print("CONNECT")
+    return PacketType.CONNECT
 
 
-def CONNECT():
-    print("CONNECT")
 
-def CONNACK():
+def CONNACK(fh):
+    ValidateZero(fh)
     print("CONNACK")
+    return PacketType.CONNACK
 
 
-def PUBLISH():
+def PUBLISH(fh):
+    ValidateZero(fh)
     print("PUBLISH")
+    return PacketType.PUBLISH
 
 
-def PUBACK():
+def PUBACK(fh):
+    ValidateZero(fh)
     print("PUBACK")
+    return PacketType.PUBACK
 
 
-def PUBREC():
+def PUBREC(fh):
+    ValidateZero(fh)
     print("PUBREC")
+    return PacketType.PUBREC
 
 
-def PUBREL():
+def PUBREL(fh):
+    ValidateOne(fh)
     print("PUBREL")
+    return PacketType.PUBREL
 
-
-def PUBCOMP():
+def PUBCOMP(fh):
+    ValidateZero(fh)
     print("PUBCOMP")
+    return PacketType.PUBCOMP
 
-
-def SUBSCRIBE():
+def SUBSCRIBE(fh):
+    ValidateOne(fh)
     print("SUBSCRIBE")
+    return PacketType.SUBSCRIBE
 
-
-def SUBACK():
+def SUBACK(fh):
+    ValidateZero(fh)
     print("SUBACK")
+    return PacketType.SUBACK
 
-
-def UNSUBSCRIBE():
+def UNSUBSCRIBE(fh):
+    ValidateOne(fh)
     print("UNSUBSCRIBE")
+    return PacketType.UNSUBSCRIBE
 
-
-def UNSUBACK():
+def UNSUBACK(fh):
+    ValidateZero(fh)
     print("UNSUBACK")
+    return PacketType.UNSUBACK
 
-
-def PINGREQ():
+def PINGREQ(fh):
+    ValidateZero(fh)
     print("PINGREQ")
+    return PacketType.PINGREQ
 
-
-def PINGRESP():
+def PINGRESP(fh):
+    ValidateZero(fh)
     print("PINGRESP")
+    return PacketType.PINGRESP
 
-
-def DISCONNECT():
+def DISCONNECT(fh):
+    ValidateZero(fh)
     print("DISCONNECT")
     return PacketType.DISCONNECT
 
-def ValidateZero(fh):
-    enc = fh.decode('utf-8')
-    if enc != '0000':
+def ValidateZero(byte):
+    byte = byte & 15
+    if( byte != 0):
         raise HeaderException()
 
-def ValidateOne(fh):
-    enc = fh.decode('utf-8')
-    if enc != '0100':
+def ValidateOne(byte):
+    byte = byte & 15
+    if( byte != 2):
         raise HeaderException()

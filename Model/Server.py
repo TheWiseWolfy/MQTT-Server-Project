@@ -2,15 +2,17 @@ import socket
 import threading
 import select
 
-from Model.Tools import bcolors
+from Model.Tools import bcol
 from Model.Package import Package, readPackage
+from Model.ClientManager import ClientManager
 
 FORMAT = 'utf-8'
 
 class MQTTServer:
     port = 1883  # Default MQTT Port
-    # clientList = list()  # A list of connected clients
+
     socketList = list()
+    clientManager = None
 
     running = False  # The status of the server
 
@@ -29,6 +31,9 @@ class MQTTServer:
         # Here we format the adress
         self.addr = (self.serverIP, self.port)
 
+        #Logica interna care manageriaza clienti
+        self.clientManager = ClientManager()
+
         # Here we bind the socket so we can use it for magic
         try:
             self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -45,9 +50,8 @@ class MQTTServer:
             raise
         else:
             print(f"Server bound on port {self.port} is starting.")
+
             self.running = True
-
-
 
     def startServer(self):
         # Server starts listenning on port
@@ -66,9 +70,6 @@ class MQTTServer:
                 conn, addr = self.serverSocket.accept()  # This fuction is BLOKING
 
                 # Here we add a new client
-               #newClient = Client(conn, addr)
-
-                # self.clientList.append(newClient)
                 self.socketList.append(conn)
 
             except OSError as err:
@@ -96,16 +97,21 @@ class MQTTServer:
                     data = readPackage(mySocket)
 
                     if not data:
+                        #cand ajungem aici PRESUPUNEM ca pachetul de disconec a fost primti deja
                         self.socketList.remove(mySocket)
                         mySocket.close()
 
                     else:
                         print(data)
-                        newPackage = Package(data)
+                        newPackage = Package()
+                        newPackage.deserialize(data)
+
+                        #this is the final objective
+                        self.clientManager.applyPachage(newPackage, socket)
 
     # This is not stupid, and actually very smart.
     def serverISKill(self):
+        self.serverSocket.close()
+
         for client in self.socketList:
             client.close()
-
-        self.serverSocket.close()
