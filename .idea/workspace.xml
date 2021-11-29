@@ -1,10 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
+<<<<<<< Updated upstream
     <list default="true" id="adc64b2c-c5df-46f2-be04-52434051ae3f" name="Changes" comment="Adding a lot of needed expections.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Model/Client.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model/Client.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Model/FIxedHeader.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model/FixedHeader.py" afterDir="false" />
+=======
+    <list default="true" id="adc64b2c-c5df-46f2-be04-52434051ae3f" name="Changes" comment="A forgotten file.">
+      <change beforePath="$PROJECT_DIR$/.idea/MQTT-Server-Project.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/MQTT-Server-Project.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_15_11_2021_11_39_[Changes]/shelved.patch" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_15_11_2021_11_39__Changes_.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Model/FixedHeader.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model/FixedHeader.py" afterDir="false" />
+>>>>>>> Stashed changes
       <change beforePath="$PROJECT_DIR$/Model/Server.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model/Server.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -22,11 +32,10 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="master" />
+        <entry key="$PROJECT_DIR$" value="Bogdan" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
-    <option name="UPDATE_TYPE" value="REBASE" />
   </component>
   <component name="GitSEFilterConfiguration">
     <file-type-list>
@@ -231,6 +240,7 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
+<<<<<<< Updated upstream
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
@@ -243,6 +253,8 @@
           <option name="timeStamp" value="17" />
         </line-breakpoint>
       </breakpoints>
+=======
+>>>>>>> Stashed changes
       <default-breakpoints>
         <breakpoint type="python-exception">
           <properties notifyOnTerminate="true" exception="BaseException">
