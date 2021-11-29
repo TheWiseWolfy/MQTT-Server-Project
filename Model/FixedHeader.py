@@ -1,11 +1,4 @@
-from Model.Tools import PacketType
-
-class HeaderException(Exception):
-    def __init__(self, message="Header invalid"):
-        self.message = message
-        super().__init__(self.message)
-
-# Aici primim bitisorii frumosi de la fixed header.
+# Aici primim bitisori frumosi de la fixed header.
 def ProcessFixedHeader(client):
     fixedHeader = client.socket.recv(8)
 
@@ -27,8 +20,9 @@ def ProcessFixedHeader(client):
     }
 
     func = switcher.get(fixedHeader[0:4], ERROR)  # Here we pick a function for processing the packet type
+    func()  # Execute the function
 
-    return func(fixedHeader[4:8]) # Execute the function and return the packet type
+    return 0
 
 def RL_Decode(client):
     res = 0
@@ -37,7 +31,7 @@ def RL_Decode(client):
     while True:
         bytes = client.socket.recv(8)
         encodedByte = to_int(bytes)
-        # print(f"\n{encodedByte}")
+        #print(f"\n{encodedByte}")
 
         res += (encodedByte & 127) * multiplier
         multiplier *= 128
@@ -46,7 +40,6 @@ def RL_Decode(client):
         if encodedByte & 128 == 0:
             break
     return res
-
 
 # def RL_Encode(x):
 #     while True:
@@ -61,107 +54,84 @@ def RL_Decode(client):
 
 
 def to_int(x):
-    enc = x.decode('utf-8')
-    aux = 128
-    res = 0
-    for i in range(0, 8):
-        if enc[i] == '1':
-            res += aux
-        aux = aux / 2
+    enc=x.decode('utf-8')
+    aux=128
+    res=0
+    for i in range(0,8):
+        if enc[i]=='1':
+            res+=aux
+        aux = aux /2
     return int(res)
 
 
-# We do different things based on different types
+#We do driffrent things based on diffrent types
 
 
-def ERROR(fh):
-    print("ERROR")
-    raise HeaderException()
-
-
-def CONNECT(fh):
-    ValidateZero(fh)
+def ERROR():
     print("CONNECT")
-    return PacketType.CONNECT
 
 
+def CONNECT():
+    print("CONNECT")
 
-def CONNACK(fh):
-    ValidateZero(fh)
+def CONNACK():
     print("CONNACK")
-    return PacketType.CONNACK
 
 
-def PUBLISH(fh):
-    ValidateZero(fh)
+def PUBLISH():
     print("PUBLISH")
-    return PacketType.PUBLISH
 
 
-def PUBACK(fh):
-    ValidateZero(fh)
+def PUBACK():
     print("PUBACK")
-    return PacketType.PUBACK
 
 
-def PUBREC(fh):
-    ValidateZero(fh)
+def PUBREC():
     print("PUBREC")
-    return PacketType.PUBREC
 
 
-def PUBREL(fh):
-    ValidateOne(fh)
+def PUBREL():
     print("PUBREL")
-    return PacketType.PUBREL
 
-def PUBCOMP(fh):
-    ValidateZero(fh)
+
+def PUBCOMP():
     print("PUBCOMP")
-    return PacketType.PUBCOMP
 
-def SUBSCRIBE(fh):
-    ValidateOne(fh)
+
+def SUBSCRIBE():
     print("SUBSCRIBE")
-    return PacketType.SUBSCRIBE
 
-def SUBACK(fh):
-    ValidateZero(fh)
+
+def SUBACK():
     print("SUBACK")
-    return PacketType.SUBACK
 
-def UNSUBSCRIBE(fh):
-    ValidateOne(fh)
+
+def UNSUBSCRIBE():
     print("UNSUBSCRIBE")
-    return PacketType.UNSUBSCRIBE
 
-def UNSUBACK(fh):
-    ValidateZero(fh)
+
+def UNSUBACK():
     print("UNSUBACK")
-    return PacketType.UNSUBACK
 
-def PINGREQ(fh):
-    ValidateZero(fh)
+
+def PINGREQ():
     print("PINGREQ")
-    return PacketType.PINGREQ
 
-def PINGRESP(fh):
-    ValidateZero(fh)
+
+def PINGRESP():
     print("PINGRESP")
-    return PacketType.PINGRESP
 
-def DISCONNECT(fh):
-    ValidateZero(fh)
+
+def DISCONNECT():
     print("DISCONNECT")
     return PacketType.DISCONNECT
 
 def ValidateZero(fh):
     enc = fh.decode('utf-8')
-    for i in range(0, 4):
-        if enc[i] != '0':
-            raise HeaderException()
+    if enc != '0000':
+        raise HeaderException()
 
 def ValidateOne(fh):
     enc = fh.decode('utf-8')
-    if enc[0] != '0' and enc[1] != '1' and enc[2] != '0' and enc[3] != '0':
+    if enc != '0100':
         raise HeaderException()

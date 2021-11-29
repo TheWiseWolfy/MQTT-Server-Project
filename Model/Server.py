@@ -2,13 +2,10 @@ import socket
 import threading
 import select
 
-from Model.Client import Client
-from Model.Tools import bcol
+from Model.Tools import bcolors
+from Model.Package import Package, readPackage
 
 FORMAT = 'utf-8'
-FIXED_HEADER = 16
-DISCONNECT_MESSAGE = "!DISCONNECT"
-
 
 class MQTTServer:
     port = 1883  # Default MQTT Port
@@ -38,18 +35,19 @@ class MQTTServer:
             self.serverSocket.bind(self.addr)
 
             # We need a thread for listening for new connections
-            self.serverThread = threading.Thread(target=self.startServer)
+            self.serverThread = threading.Thread(target=self.startServer,  args=())
             self.serverThread.start()
 
-            self.receiveThread = threading.Thread(target=self.handleClients)
+            self.receiveThread = threading.Thread(target=self.handleClients, args=())
             self.receiveThread.start()
-
         except BaseException as err:
             print(f"{bcol.WARNING} Unexpected {err=}, {type(err)=} is server startup.{bcol.ENDC}")
             raise
         else:
             print(f"Server bound on port {self.port} is starting.")
             self.running = True
+
+
 
     def startServer(self):
         # Server starts listenning on port
@@ -63,11 +61,12 @@ class MQTTServer:
 
         # This is the main loop for new clients
         while True:
+
             try:
                 conn, addr = self.serverSocket.accept()  # This fuction is BLOKING
 
                 # Here we add a new client
-                newClient = Client(conn, addr)
+               #newClient = Client(conn, addr)
 
                 # self.clientList.append(newClient)
                 self.socketList.append(conn)
@@ -85,20 +84,24 @@ class MQTTServer:
         print(f"Server has quit.")
 
     def handleClients(self):
+
         while self.running:
             if len(self.socketList) == 0:
                 continue
 
             selectedSockets, _, _ = select.select(self.socketList, [], [], 1)
+
             if selectedSockets:
-                for socket in selectedSockets:
-                    data = socket.recv(1024)
+                for mySocket in selectedSockets:
+                    data = readPackage(mySocket)
+
                     if not data:
-                        self.socketList.remove(socket)
-                        socket.close()
+                        self.socketList.remove(mySocket)
+                        mySocket.close()
 
                     else:
                         print(data)
+                        newPackage = Package(data)
 
     # This is not stupid, and actually very smart.
     def serverISKill(self):
