@@ -26,3 +26,7 @@ class PacketType(enum.Enum):
     PINGREQ=12
     PINGRESP=13
     DISCONNECT=14
+
+def modifyBit( n,  p,  b):
+    mask = 1 << p
+    return (n & ~mask) | ((b << p) & mask)
