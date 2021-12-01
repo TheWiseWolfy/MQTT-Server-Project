@@ -64,18 +64,14 @@ def CONNECT(package, data):
         package.will_retain = False  # nu stiu daca asa functioneaza randul 509 din documentatie
         print("\nNu afisam un Will Message")
 
-    b8_modified = modifyBit(modifyBit(modifyBit(b8_int, 7, 0), 6, 0), 5,
-                            0)  # am schimbat in '0' pe 3 cei mai semnificativi biti
-    # pentru a verifica mai usor valorile bitilor 4 si 3
-
-    if b8_modified < 24:
-        if b8_modified <= 7:
+    if b8_int & 24 < 24:
+        if b8_int & 24 <= 7:
             print("\nAvem Will QoS=0")
             package.will_qos = 0
-        elif b8_modified <= 15:
+        elif b8_int & 24 <= 15:
             print("\nAvel Will QoS=1")
             package.will_qos = 1
-        elif b8_modified <= 23:
+        elif b8_int & 24 <= 23:
             print("\nAvem Will QoS=2")
             package.will_qos = 2
     else:
@@ -100,20 +96,56 @@ def CONNECT(package, data):
     print("\nKeep alive =", package.keep_alive, "secunde")
 
     client_id_length = int.from_bytes(b11 + b12, byteorder='big', signed=False)
-    fmt = '22c'
+    fmt = str(client_id_length) + 'c'
     id_tuple = unpack(fmt, data[14:14 + client_id_length])
     package.client_id = ""
     for x in id_tuple:
         package.client_id += x.decode("utf-8")
-    #main.App.add_element(App, package.client_id)
+
     package.QoS = 0
+    pass
 
 
 def CONNACK(data):
     pass
 
 
-def PUBLISH(data):
+def PUBLISH(package, data):
+    formString = 'cccc'
+    b1, _, b3, b4 = unpack(formString, data[0: 4])
+    b1_int = int.from_bytes(b1, byteorder='big', signed=False)
+    package.dup = b1_int & 8
+    print("\nDUP flag = ", package.dup)
+
+    if b1_int & 6 < 6:
+        if b1_int & 6 <= 1:
+            print("\nAvem QoS=0")
+            package.qos = 0
+        elif b1_int & 6 <= 3:
+            print("\nAvel QoS=1")
+            package.qos = 1
+        elif b1_int & 6 <= 5:
+            print("\nAvem QoS=2")
+            package.qos = 2
+    else:
+        print("\nQoS invalid (=3), inchidem conexiunea")
+
+    package.retain = b1_int & 1
+
+    topic_name_length = int.from_bytes(b3 + b4, byteorder='big', signed=False)
+    fmt = str(topic_name_length + (2 if package.qos > 0 else 0)) + 'c'
+    tuple_pub = unpack(fmt, data[4:4 + topic_name_length + (2 if package.qos > 0 else 0)])
+
+    package.topic_name = ""
+    for x in range(0, topic_name_length):
+        package.topic_name += tuple_pub[x].decode("utf-8")
+    print("\n Topic name:", package.topic_name)
+
+    if package.qos > 0:
+        for y in range(topic_name_length, topic_name_length + 2):
+            package.packetIdentifier += int.from_bytes(tuple_pub[y], byteorder='big', signed=False)
+    print("\n Packet ID:", package.packetIdentifier)
+
     pass
 
 
