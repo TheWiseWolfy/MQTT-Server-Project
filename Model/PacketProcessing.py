@@ -44,10 +44,10 @@ def CONNECT(package, data):
         print("\nBitul reserved nu este 0, cerem deconectarea clientului")
 
     if b8_int & 2 == 2:
-        package.clean = True
+        package.clearSession = True
         print("\nBitul CleanSession este 1")
     else:
-        package.clean = False
+        package.clearSession = False
         print("\nBitul CleanSession este 0")
 
     if b8_int & 4 == 4:
@@ -107,7 +107,6 @@ def CONNECT(package, data):
         package.client_id += x.decode("utf-8")
     #main.App.add_element(App, package.client_id)
     package.QoS = 0
-
 
 def CONNACK(data):
     pass

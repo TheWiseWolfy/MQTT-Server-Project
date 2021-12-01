@@ -14,7 +14,11 @@ class Package:
     length = 0
 
     packetIdentifier = 0
-    payload = None
+    client_id = None
+
+    #Connect
+    clearSession = None
+    will_flag = None
 
     def __init__(self):
         pass
@@ -27,13 +31,6 @@ class Package:
 
     def serialize(self):
         pass
-
-
-
-
-
-
-
 
 # This fuction can read a pachage from a socket
 def readPackage(socket):
