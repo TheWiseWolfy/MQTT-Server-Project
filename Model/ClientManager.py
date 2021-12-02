@@ -1,6 +1,7 @@
 from Model.Tools import *
 from Model.Client import Client
 from Model.Session import Sesion
+from Model.Package import Package
 
 
 class ClientManager:
@@ -10,7 +11,7 @@ class ClientManager:
     def __init__(self):
         pass
 
-    def applyPachage(self, package, socket):
+    def applyPachage(self, package, mySocket):
         # Daca detectam un pachet de tip CONNECT
         # cautam ID-ul clientului sa vedem daca inca mai exista in lista noasta de clienti
         # daca nu exista, cram un client nou, si asamblam pachetul CONNECT
@@ -18,11 +19,13 @@ class ClientManager:
 
         if (package.type == PacketType.CONNECT):
             newClient = None
+            sessionAlreadyExisted = False
 
             ## CLIENT HANDDLELING ##
 
             if package.client_id not in self.clients:
                 newClient = Client(package.client_id)
+                newClient.socket = mySocket    #aici asociem fiecare socket cu un client
                 self.clients[package.client_id] = newClient
             else:
                 raise "this is not allowed buddy"
@@ -44,6 +47,7 @@ class ClientManager:
                     newClient.currentSession = newSession
                 else:                                            #daca exista deja o sesiune, doar o reasociem
                     newClient.currentSession = self.sessions[package.client_id]
+                    sessionAlreadyExisted = True
 
             ##WILL MESSAGE HANDDLELINGN ##
 
@@ -51,3 +55,12 @@ class ClientManager:
                 newClient.willFlag = True
                 newClient.willMessage = "I guess someone forgot to implement the actual WILL MESSAGEEEEEEEEEEE"
 
+            ## CONNACK ##
+
+            newPackage = Package()
+            newPackage.type = PacketType.CONNACK
+            newPackage.clearSession = package.clearSession #We keep this data in order to form the CONNAK properly
+            newPackage.sessionAlreadyExisted = sessionAlreadyExisted
+            data = newPackage.serialize()
+
+            newClient.socket.send(data)

@@ -92,27 +92,31 @@ def CONNECT(package, data):
         package.password = False
         print("\nNU trebuie sa avem o parola in payload")
 
-    package.keep_alive = int.from_bytes(b10 + b9, byteorder='big', signed=False)
+    package.keep_alive = int.from_bytes(b9 + b10, byteorder='big', signed=False)
     print("\nKeep alive =", package.keep_alive, "secunde")
 
     client_id_length = int.from_bytes(b11 + b12, byteorder='big', signed=False)
     fmt = str(client_id_length) + 'c'
+
     id_tuple = unpack(fmt, data[14:14 + client_id_length])
     package.client_id = ""
     for x in id_tuple:
         package.client_id += x.decode("utf-8")
+    print('\n', package.client_id)
 
     package.QoS = 0
-    pass
 
-def CONNACK(data):
+
+def CONNACK(package, data):
     pass
 
 
 def PUBLISH(package, data):
     formString = 'cccc'
-    b1, _, b3, b4 = unpack(formString, data[0: 4])
+    b1, b2, b3, b4 = unpack(formString, data[0: 4])
     b1_int = int.from_bytes(b1, byteorder='big', signed=False)
+    b2_int = int.from_bytes(b2, byteorder='big', signed=False)
+
     package.dup = b1_int & 8
     print("\nDUP flag = ", package.dup)
 
@@ -140,53 +144,61 @@ def PUBLISH(package, data):
         package.topic_name += tuple_pub[x].decode("utf-8")
     print("\n Topic name:", package.topic_name)
 
+    package.packetIdentifier = ""
     if package.qos > 0:
-        for y in range(topic_name_length, topic_name_length + 2):
-            package.packetIdentifier += int.from_bytes(tuple_pub[y], byteorder='big', signed=False)
+        package.packetIdentifier = int.from_bytes(tuple_pub[topic_name_length] + tuple_pub[topic_name_length + 1],
+                                                  byteorder='big', signed=False)
     print("\n Packet ID:", package.packetIdentifier)
 
+    brah = 4 + topic_name_length + (2 if package.qos > 0 else 0)
+    fmt = str(b2_int - brah+2) + 'c'
+    message = unpack(fmt, data[brah: b2_int + 2])
+
+    package.message = ""
+    for x in range(0, b2_int - brah+2):
+        package.message += message[x].decode("utf-8")
+    print("\n Publish message:", package.message)
+
+
+def PUBACK(package, data):
     pass
 
 
-def PUBACK(data):
+def PUBREC(package, data):
     pass
 
 
-def PUBREC(data):
+def PUBREL(package, data):
     pass
 
 
-def PUBREL(data):
+def PUBCOMP(package, data):
     pass
 
 
-def PUBCOMP(data):
+def SUBSCRIBE(package, data):
     pass
 
 
-def SUBSCRIBE(data):
+def SUBACK(package, data):
     pass
 
 
-def SUBACK(data):
+def UNSUBSCRIBE(package, data):
     pass
 
 
-def UNSUBSCRIBE(data):
+def UNSUBACK(package, data):
     pass
 
 
-def UNSUBACK(data):
+def PINGREQ(package, data):
     pass
 
 
-def PINGREQ(data):
+def PINGRESP(package, data):
     pass
 
 
-def PINGRESP(data):
-    pass
-
-
-def DISCONNECT(data):
+def DISCONNECT(package, data):
     pass

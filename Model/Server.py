@@ -103,12 +103,12 @@ class MQTTServer:
                         mySocket.close()
 
                     else:
-                        print(data)
+                        print(data) #exista
                         newPackage = Package()
                         newPackage.deserialize(data)
 
                         # this is the final objective
-                        self.clientManager.applyPachage(newPackage, socket)
+                        self.clientManager.applyPachage(newPackage, mySocket)
 
     # This is not stupid, and actually very smart.
     def serverISKill(self):
