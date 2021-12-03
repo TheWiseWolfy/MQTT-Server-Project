@@ -84,7 +84,7 @@ def CONNACK(fh):
 
 
 def PUBLISH(fh):
-    ValidateZero(fh)
+    #ValidateZero(fh)
     print("PUBLISH")
     return PacketType.PUBLISH
 

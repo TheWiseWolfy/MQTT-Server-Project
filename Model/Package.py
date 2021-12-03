@@ -1,6 +1,7 @@
 
 from Model.FixedHeader import ProcessFixedHeader
 from Model.PacketProcessing import *
+from Model.PacketFactory import createPackage
 
 # https://docs.python.org/3/library/struct.html
 
@@ -14,25 +15,24 @@ class Package:
     length = 0
 
     packetIdentifier = 0
-    payload = None
+    client_id = None
+
+    #Connect
+    clearSession = None
+    will_flag = None
+
+    #Connak
+    sessionAlreadyExisted = False
 
     def __init__(self):
         pass
 
     def deserialize(self, data):
         self.type = ProcessFixedHeader(data)
-
-        processPackage(self, self.type, data )
-        print(self.QoS)
+        processPackage(self, self.type, data)
 
     def serialize(self):
-        pass
-
-
-
-
-
-
+        return createPackage( self)
 
 
 # This fuction can read a pachage from a socket

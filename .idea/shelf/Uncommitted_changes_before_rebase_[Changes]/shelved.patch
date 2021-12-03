@@ -1,0 +1,68 @@
+Index: Model/Server.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import socket\r\nimport threading\r\nimport select\r\n\r\nfrom Model.Tools import bcol\r\nfrom Model.Package import Package, readPackage\r\nfrom Model.ClientManager import ClientManager\r\n\r\nFORMAT = 'utf-8'\r\n\r\nclass MQTTServer:\r\n    port = 1883  # Default MQTT Port\r\n\r\n    socketList = list()\r\n    clientManager = None\r\n\r\n    running = False  # The status of the server\r\n\r\n    serverIP = 0  # Ip used by the server\r\n    serverSocket = None  # The socket used for listening to new clients\r\n    serverThread = None\r\n    receiveThread = None\r\n\r\n    def __init__(self):\r\n        # Figure out primary ip of the machine. Will fail if weird network adapters are not turned off.\r\n        hostname = socket.gethostname()\r\n        self.serverIP = socket.gethostbyname(hostname)\r\n\r\n        print(f\"{bcol.OKBLUE}Server has taked IP: {self.serverIP}{bcol.ENDC}\")\r\n\r\n        # Here we format the adress\r\n        self.addr = (self.serverIP, self.port)\r\n\r\n        #Logica interna care manageriaza clienti\r\n        self.clientManager = ClientManager()\r\n\r\n        # Here we bind the socket so we can use it for magic\r\n        try:\r\n            self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)\r\n            self.serverSocket.bind(self.addr)\r\n\r\n            # We need a thread for listening for new connections\r\n            self.serverThread = threading.Thread(target=self.startServer,  args=())\r\n            self.serverThread.start()\r\n\r\n            self.receiveThread = threading.Thread(target=self.handleClients, args=())\r\n            self.receiveThread.start()\r\n        except BaseException as err:\r\n            print(f\"{bcol.WARNING} Unexpected {err=}, {type(err)=} is server startup.{bcol.ENDC}\")\r\n            raise\r\n        else:\r\n            print(f\"Server bound on port {self.port} is starting.\")\r\n\r\n            self.running = True\r\n\r\n    def startServer(self):\r\n        # Server starts listenning on port\r\n        try:\r\n            self.serverSocket.listen()\r\n        except BaseException as err:\r\n            print(f\"{bcol.WARNING}Unexpected {err=}, {type(err)=}.Thread is quitting.{bcol.ENDC}\")\r\n            return\r\n\r\n        print(f\"Server is listening on {self.addr}\\n\")\r\n\r\n        # This is the main loop for new clients\r\n        while True:\r\n\r\n            try:\r\n                conn, addr = self.serverSocket.accept()  # This fuction is BLOKING\r\n\r\n                # Here we add a new client\r\n                self.socketList.append(conn)\r\n\r\n            except OSError as err:\r\n                self.running = False\r\n                break  # this case if for quitting the loop once the socket has been closed\r\n            except BaseException as err:\r\n                print(f\"{bcol.WARNING}Unexpected {err=}, {type(err)=} in starting client on adress.{bcol.ENDC}\\n\")\r\n                continue\r\n            else:  # this case runs when no exception has occured\r\n                print(f\"{bcol.OKBLUE}Client on address {addr} successfully started.{bcol.ENDC}\")\r\n\r\n        self.receiveThread.join()\r\n        print(f\"Server has quit.\")\r\n\r\n    def handleClients(self):\r\n\r\n        while self.running:\r\n            if len(self.socketList) == 0:\r\n                continue\r\n\r\n            selectedSockets, _, _ = select.select(self.socketList, [], [], 1)\r\n\r\n            if selectedSockets:\r\n                for mySocket in selectedSockets:\r\n                    data = readPackage(mySocket)\r\n\r\n                    if not data:\r\n                        #cand ajungem aici PRESUPUNEM ca pachetul de disconec a fost primti deja\r\n                        self.socketList.remove(mySocket)\r\n                        mySocket.close()\r\n\r\n                    else:\r\n                        print(data)\r\n                        newPackage = Package()\r\n                        newPackage.deserialize(data)\r\n\r\n                        #this is the final objective\r\n                        self.clientManager.applyPachage(newPackage, socket)\r\n\r\n    # This is not stupid, and actually very smart.\r\n    def serverISKill(self):\r\n        self.serverSocket.close()\r\n\r\n        for client in self.socketList:\r\n            client.close()\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Model/Server.py b/Model/Server.py
+--- a/Model/Server.py	(revision 0c0783c4d8dfd6c8698a27b46e9b7644b2f81d1f)
++++ b/Model/Server.py	(date 1638292730234)
+@@ -107,6 +107,7 @@
+                         newPackage.deserialize(data)
+ 
+                         #this is the final objective
++
+                         self.clientManager.applyPachage(newPackage, socket)
+ 
+     # This is not stupid, and actually very smart.
+Index: Model/Package.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>\r\nfrom Model.FixedHeader import ProcessFixedHeader\r\nfrom Model.PacketProcessing import *\r\n\r\n# https://docs.python.org/3/library/struct.html\r\n\r\nclass Package:\r\n    type = None\r\n    dup = False  # Duplicate delivery of a PUBLISH Control Packet\r\n\r\n    QoS = None  # PUBLISH Quality of Service\r\n    retain = False  # PUBLISH Retain flag\r\n\r\n    length = 0\r\n\r\n    packetIdentifier = 0\r\n    payload = None\r\n\r\n    def __init__(self):\r\n        pass\r\n\r\n    def deserialize(self, data):\r\n        self.type = ProcessFixedHeader(data)\r\n\r\n        processPackage(self, self.type, data )\r\n        print(self.QoS)\r\n\r\n    def serialize(self):\r\n        pass\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n# This fuction can read a pachage from a socket\r\ndef readPackage(socket):\r\n    packageBites = b''\r\n    packageBites += socket.recv(1024)\r\n\r\n    # if packageBites:\r\n    # remainingLengthOfPackage = lengthDecode(socket)\r\n    # print(f\" The size of the pachage is:{remainingLengthOfPackage}\")\r\n\r\n    # packageBites += socket.recv(remainingLengthOfPackage)\r\n\r\n    return packageBites\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Model/Package.py b/Model/Package.py
+--- a/Model/Package.py	(revision 0c0783c4d8dfd6c8698a27b46e9b7644b2f81d1f)
++++ b/Model/Package.py	(date 1638292513557)
+@@ -15,7 +15,6 @@
+ 
+     packetIdentifier = 0
+     payload = None
+-
+     def __init__(self):
+         pass
+ 
+Index: Model/PacketProcessing.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from Model.Tools import *\r\nfrom struct import *\r\n\r\ndef processPackage(package, type, data):\r\n\r\n    switcher = {\r\n        PacketType.CONNECT: CONNECT,\r\n        PacketType.CONNACK: CONNACK,\r\n        PacketType.PUBLISH: PUBLISH,\r\n        PacketType.PUBACK: PUBACK,\r\n        PacketType.PUBREC: PUBREC,\r\n        PacketType.PUBREL: PUBREL,\r\n        PacketType.PUBCOMP: PUBCOMP,\r\n        PacketType.SUBSCRIBE: SUBSCRIBE,\r\n        PacketType.SUBACK: SUBACK,\r\n        PacketType.UNSUBSCRIBE: UNSUBSCRIBE,\r\n        PacketType.UNSUBACK: UNSUBACK,\r\n        PacketType.PINGREQ: PINGREQ,\r\n        PacketType.PINGRESP: PINGRESP,\r\n        PacketType.DISCONNECT: DISCONNECT,\r\n    }\r\n    func = switcher.get(type)\r\n    return func(package,data)\r\n\r\ndef CONNECT(package,data):\r\n    formString = 'ccc'\r\n\r\n    _, _, c = unpack(formString, data[0: 3])\r\n\r\n    if c == b'\\x10':\r\n        print(\"all good\")\r\n\r\n    package.QoS = 0;\r\n    package.abracadabra = 122\r\n\r\ndef CONNACK(data):\r\n    pass\r\n\r\n\r\ndef PUBLISH(data):\r\n    pass\r\n\r\n\r\ndef PUBACK(data):\r\n    pass\r\n\r\n\r\ndef PUBREC(data):\r\n    pass\r\n\r\n\r\ndef PUBREL(data):\r\n    pass\r\n\r\n\r\ndef PUBCOMP(data):\r\n    pass\r\n\r\n\r\ndef SUBSCRIBE(data):\r\n    pass\r\n\r\n\r\ndef SUBACK(data):\r\n    pass\r\n\r\n\r\ndef UNSUBSCRIBE(data):\r\n    pass\r\n\r\n\r\ndef UNSUBACK(data):\r\n    pass\r\n\r\n\r\ndef PINGREQ(data):\r\n    pass\r\n\r\n\r\ndef PINGRESP(data):\r\n    pass\r\n\r\n\r\ndef DISCONNECT(data):\r\n    pass\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Model/PacketProcessing.py b/Model/PacketProcessing.py
+--- a/Model/PacketProcessing.py	(revision 0c0783c4d8dfd6c8698a27b46e9b7644b2f81d1f)
++++ b/Model/PacketProcessing.py	(date 1638292405760)
+@@ -25,15 +25,18 @@
+ def CONNECT(package,data):
+     formString = 'ccc'
+ 
+-    _, _, c = unpack(formString, data[0: 3])
++    _, _, c = unpack(formString, data)
+ 
+     if c == b'\x10':
+         print("all good")
+ 
+-    package.QoS = 0;
+-    package.abracadabra = 122
++    package.QoS = 0
++    package.petrisor = 0
++    package.clientID = 1231
++    #pachetul e complet
+ 
+ def CONNACK(data):
++
+     pass
+ 
+ 

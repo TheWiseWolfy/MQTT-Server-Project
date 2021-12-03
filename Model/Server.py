@@ -8,6 +8,7 @@ from Model.ClientManager import ClientManager
 
 FORMAT = 'utf-8'
 
+
 class MQTTServer:
     port = 1883  # Default MQTT Port
 
@@ -31,7 +32,7 @@ class MQTTServer:
         # Here we format the adress
         self.addr = (self.serverIP, self.port)
 
-        #Logica interna care manageriaza clienti
+        # Logica interna care manageriaza clienti
         self.clientManager = ClientManager()
 
         # Here we bind the socket so we can use it for magic
@@ -40,7 +41,7 @@ class MQTTServer:
             self.serverSocket.bind(self.addr)
 
             # We need a thread for listening for new connections
-            self.serverThread = threading.Thread(target=self.startServer,  args=())
+            self.serverThread = threading.Thread(target=self.startServer, args=())
             self.serverThread.start()
 
             self.receiveThread = threading.Thread(target=self.handleClients, args=())
@@ -97,17 +98,17 @@ class MQTTServer:
                     data = readPackage(mySocket)
 
                     if not data:
-                        #cand ajungem aici PRESUPUNEM ca pachetul de disconec a fost primti deja
+                        # cand ajungem aici PRESUPUNEM ca pachetul de disconec a fost primti deja
                         self.socketList.remove(mySocket)
                         mySocket.close()
 
                     else:
-                        print(data)
+                        print(data) #exista
                         newPackage = Package()
                         newPackage.deserialize(data)
 
-                        #this is the final objective
-                        self.clientManager.applyPachage(newPackage, socket)
+                        # this is the final objective
+                        self.clientManager.applyPachage(newPackage, mySocket)
 
     # This is not stupid, and actually very smart.
     def serverISKill(self):
@@ -115,3 +116,4 @@ class MQTTServer:
 
         for client in self.socketList:
             client.close()
+        self.running = False
