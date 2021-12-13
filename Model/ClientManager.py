@@ -5,7 +5,7 @@ from Model.Package import Package
 
 
 class ClientManager:
-    clients = dict()
+    activeClients = dict()
     sessions = dict()
 
     def __init__(self):
@@ -18,49 +18,74 @@ class ClientManager:
         # pe care il trimitem inapoi tot aici
 
         if (package.type == PacketType.CONNECT):
-            newClient = None
-            sessionAlreadyExisted = False
+            self.ProcessConnect(package, mySocket)
 
-            ## CLIENT HANDDLELING ##
+        if (package.type == PacketType.SUBSCRIBE):
+            self.ProcessSUBSCRIBE(package, mySocket)
 
-            if package.client_id not in self.clients:
-                newClient = Client(package.client_id)
-                newClient.socket = mySocket    #aici asociem fiecare socket cu un client
-                self.clients[package.client_id] = newClient
-            else:
-                raise "this is not allowed buddy"
+    #This fuction exists in case the client dies before sending a disconect.
+    def disconectClientWithSocket(self, mySocket):
+        del self.activeClients[mySocket]
+
+    #Logica de raspuns pentru diferite pachete
 
 
-            ## SESSION HANDDLELING ##
-            if package.clearSession:        # Daca clear session este setat pe 1
-                if package.client_id in self.sessions:
-                    del self.sessions[package.client_id]
+    def ProcessConnect(self,package, mySocket):
+        #Flags for connack
+        sessionAlreadyExisted = False
 
-                newSession = Sesion(persistent=False)       #cream o sesiune noua menita sa fie temporara
+        ## CLIENT HANDDLELING ##
+
+        #Clientul este un obiect care exista doar pe parcursul conectiuni !!
+        if  package.client_id in self.activeClients:
+           raise "This client has not been properly disconected last time."
+
+        #Cream o structura de date de tip client
+        newClient = Client(package.client_id)
+        newClient.associatedSocket = mySocket             # Aici asociem fiecare socket cu un client
+        self.activeClients[mySocket] = newClient           #Fiecare client este identificat dupa socket-ul pe care sta ?
+
+        ## SESSION HANDDLELING ##
+        if package.clearSession:  # Daca clear session este setat pe 1
+            if package.client_id in self.sessions:
+                del self.sessions[package.client_id]   #Daca gasim o sesiune, o stergem
+
+            newSession = Sesion(persistent=False)  # cream o sesiune noua menita sa fie temporara
+            self.sessions[package.client_id] = newSession
+
+        else:  # Daca clear session este setat pe 0
+            if package.client_id not in self.sessions:  # daca nu exista o sesiune existenta pentru client id-ul curent
+                newSession = Sesion(persistent=True)  # cream noi o sesiune si o asociem noului client
                 self.sessions[package.client_id] = newSession
-                newClient.currentSession = newSession
-            else:                            # Daca clear session este setat pe 0
-                if package.client_id not in self.sessions:       #daca nu exista o sesiune existenta pentru client id-ul curent
+            else:  # daca exista deja o sesiune, doar confirmam asta prin connack
+                sessionAlreadyExisted = True
 
-                    newSession = Sesion(persistent=True)        #cream noi o sesiune si o asociem noului client
-                    self.sessions[package.client_id] = newSession
-                    newClient.currentSession = newSession
-                else:                                            #daca exista deja o sesiune, doar o reasociem
-                    newClient.currentSession = self.sessions[package.client_id]
-                    sessionAlreadyExisted = True
+        ##WILL MESSAGE HANDDLELINGN ##
 
-            ##WILL MESSAGE HANDDLELINGN ##
+        # if package.will_flag:
+        #     newClient.willFlag = True
+        #     newClient.willMessage = "I guess someone forgot to implement the actual WILL MESSAGEEEEEEEEEEE"
 
-            if package.will_flag:
-                newClient.willFlag = True
-                newClient.willMessage = "I guess someone forgot to implement the actual WILL MESSAGEEEEEEEEEEE"
+        ## CONNACK ##
 
-            ## CONNACK ##
+        newPackage = Package()
+        newPackage.type = PacketType.CONNACK
+        newPackage.clearSession = package.clearSession  # We keep this data in order to form the CONNAK properly
+        newPackage.sessionAlreadyExisted = sessionAlreadyExisted
+        data = newPackage.serialize()
 
-            newPackage = Package()
-            newPackage.type = PacketType.CONNACK
-            newPackage.clearSession = package.clearSession #We keep this data in order to form the CONNAK properly
-            newPackage.sessionAlreadyExisted = sessionAlreadyExisted
-            data = newPackage.serialize()
+        newClient.associatedSocket.send(data)
 
-            newClient.socket.send(data)
+    def ProcessSUBSCRIBE(self, package, mySocket):
+
+        #Here we should probably do important stuffs
+
+        ## SUBACK ##
+
+        newPackage = Package()
+        newPackage.type = PacketType.SUBACK
+        newPackage.packetIdentifier = package.packetIdentifier
+        data = newPackage.serialize()
+        mySocket.send(data)
+
+        pass

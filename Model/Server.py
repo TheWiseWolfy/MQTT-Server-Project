@@ -100,10 +100,10 @@ class MQTTServer:
                     if not data:
                         # cand ajungem aici PRESUPUNEM ca pachetul de disconec a fost primti deja
                         self.socketList.remove(mySocket)
+                        self.clientManager.disconectClientWithSocket(mySocket)
                         mySocket.close()
 
                     else:
-                        print(data) #exista
                         newPackage = Package()
                         newPackage.deserialize(data)
 

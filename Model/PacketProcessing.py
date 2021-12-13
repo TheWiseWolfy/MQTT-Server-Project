@@ -118,11 +118,11 @@ def PUBLISH(package, data):
     b2_int = int.from_bytes(b2, byteorder='big', signed=False)
 
     package.dup = b1_int & 8
-    print("\nDUP flag = ", package.dup)
+    print("DUP flag = ", package.dup)
 
     if b1_int & 6 < 6:
         if b1_int & 6 <= 1:
-            print("\nAvem QoS=0")
+            print("Avem QoS=0")
             package.qos = 0
         elif b1_int & 6 <= 3:
             print("\nAvel QoS=1")
@@ -177,8 +177,28 @@ def PUBCOMP(package, data):
 
 
 def SUBSCRIBE(package, data):
-    pass
+    formString = 'cccc'
 
+    #Variable header
+    _, _, b1, b2, = unpack(formString, data[0: 4])
+    package.packetIdentifier =  int.from_bytes(b1 + b2 ,"big", signed=False)
+
+    #Payload
+    dataPointer = 4
+
+    topicSize = int.from_bytes(data[dataPointer:dataPointer + 2]  ,"big", signed=False)
+    print(f"My topic size is {topicSize}")
+
+    startOfTopicPointer =  dataPointer + 2
+    endOfTopicPointer = topicSize + startOfTopicPointer   #Calculam unde se termina sirul de caractere al topicului dupa dataPointer
+
+    topicName = data[startOfTopicPointer:endOfTopicPointer].decode("utf-8")
+    topicQoS = data[endOfTopicPointer]
+
+    package.topicList.append((topicName, topicQoS))     #Aici inseram un touple format din numele topicului si QoS-ul
+
+    #Aici ar trebui sa poata citi o lista de topicuri dar cu clientul asta, nu pare sa fie necesar aparent.
+    dataPointer = endOfTopicPointer
 
 def SUBACK(package, data):
     pass
