@@ -1,3 +1,6 @@
+import time
+from datetime import datetime
+
 from Model.Tools import *
 from Model.Client import Client
 from Model.Session import Sesion
@@ -23,32 +26,45 @@ class ClientManager:
         if (package.type == PacketType.SUBSCRIBE):
             self.ProcessSUBSCRIBE(package, mySocket)
 
-    #This fuction exists in case the client dies before sending a disconect.
+    # This fuction exists in case the client dies before sending a disconect.
     def disconectClientWithSocket(self, mySocket):
         del self.activeClients[mySocket]
 
-    #Logica de raspuns pentru diferite pachete
+    # Logica de raspuns pentru diferite pachete
 
+    def keep_alive_check(self):
+        for x in self.activeClients.values():
+            if x.deadline <= time.time() and x.ping_sent == False:
+                newPackage = Package()
+                newPackage.type = PacketType.PUBREQ
+                data = newPackage.serialize()
+                print("sa produs")
+                x.ping_sent=True
+                # mySocket.send(data)
+            elif x.ext_deadline <= time.time():
+                print("sa produs si asta")
+                del x
+                pass
 
-    def ProcessConnect(self,package, mySocket):
-        #Flags for connack
+    def ProcessConnect(self, package, mySocket):
+        # Flags for connack
         sessionAlreadyExisted = False
 
         ## CLIENT HANDDLELING ##
 
-        #Clientul este un obiect care exista doar pe parcursul conectiuni !!
-        if  package.client_id in self.activeClients:
-           raise "This client has not been properly disconected last time."
+        # Clientul este un obiect care exista doar pe parcursul conectiuni !!
+        if package.client_id in self.activeClients:
+            raise "This client has not been properly disconected last time."
 
-        #Cream o structura de date de tip client
-        newClient = Client(package.client_id)
-        newClient.associatedSocket = mySocket             # Aici asociem fiecare socket cu un client
-        self.activeClients[mySocket] = newClient           #Fiecare client este identificat dupa socket-ul pe care sta ?
+        # Cream o structura de date de tip client
+        newClient = Client(package.client_id, package.keep_alive)
+        newClient.associatedSocket = mySocket  # Aici asociem fiecare socket cu un client
+        self.activeClients[mySocket] = newClient  # Fiecare client este identificat dupa socket-ul pe care sta ?
 
         ## SESSION HANDDLELING ##
         if package.clearSession:  # Daca clear session este setat pe 1
             if package.client_id in self.sessions:
-                del self.sessions[package.client_id]   #Daca gasim o sesiune, o stergem
+                del self.sessions[package.client_id]  # Daca gasim o sesiune, o stergem
 
             newSession = Sesion(persistent=False)  # cream o sesiune noua menita sa fie temporara
             self.sessions[package.client_id] = newSession
@@ -78,7 +94,7 @@ class ClientManager:
 
     def ProcessSUBSCRIBE(self, package, mySocket):
 
-        #Here we should probably do important stuffs
+        # Here we should probably do important stuffs
 
         ## SUBACK ##
 

@@ -92,6 +92,7 @@ class MQTTServer:
                 continue
 
             selectedSockets, _, _ = select.select(self.socketList, [], [], 1)
+            self.clientManager.keep_alive_check()
 
             if selectedSockets:
                 for mySocket in selectedSockets:
@@ -109,6 +110,7 @@ class MQTTServer:
 
                         # this is the final objective
                         self.clientManager.applyPachage(newPackage, mySocket)
+
 
     # This is not stupid, and actually very smart.
     def serverISKill(self):
