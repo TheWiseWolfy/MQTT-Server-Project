@@ -5,8 +5,8 @@ from Model.Package import Package
 
 
 class ClientManager:
-    activeClients = dict()
-    sessions = dict()
+    activeClients = dict()    #A client is asociate with the lifetime of a socket
+    sessions = dict()          #A socket is associated with a client id
 
     def __init__(self):
         pass
@@ -19,9 +19,10 @@ class ClientManager:
 
         if (package.type == PacketType.CONNECT):
             self.ProcessConnect(package, mySocket)
-
-        if (package.type == PacketType.SUBSCRIBE):
-            self.ProcessSUBSCRIBE(package, mySocket)
+        elif (package.type == PacketType.SUBSCRIBE):
+            self.ProcessSubscribe(package, mySocket)
+        elif (package.type == PacketType.PUBLISH):
+            self.ProcessPublish(package, mySocket)
 
     #This fuction exists in case the client dies before sending a disconect.
     def disconectClientWithSocket(self, mySocket):
@@ -37,30 +38,31 @@ class ClientManager:
         ## CLIENT HANDDLELING ##
 
         #Clientul este un obiect care exista doar pe parcursul conectiuni !!
-        if  package.client_id in self.activeClients:
+        if mySocket in self.activeClients:
            raise "This client has not been properly disconected last time."
 
         #Cream o structura de date de tip client
-        newClient = Client(package.client_id)
-        newClient.associatedSocket = mySocket             # Aici asociem fiecare socket cu un client
+        newClient = Client(package.client_id, mySocket)
         self.activeClients[mySocket] = newClient           #Fiecare client este identificat dupa socket-ul pe care sta ?
 
         ## SESSION HANDDLELING ##
         if package.clearSession:  # Daca clear session este setat pe 1
             if package.client_id in self.sessions:
-                del self.sessions[package.client_id]   #Daca gasim o sesiune, o stergem
+                del self.sessions[package.client_id]                #Daca gasim o sesiune, o stergem
 
-            newSession = Sesion(persistent=False)  # cream o sesiune noua menita sa fie temporara
+            newSession = Sesion(persistent=False)           # cream o sesiune noua menita sa fie temporara
             self.sessions[package.client_id] = newSession
-
-        else:  # Daca clear session este setat pe 0
+            newClient.associatedSession = newSession         #Asociem momentan clientul cu sesiunea
+        else:                                           # Daca clear session este setat pe 0
             if package.client_id not in self.sessions:  # daca nu exista o sesiune existenta pentru client id-ul curent
-                newSession = Sesion(persistent=True)  # cream noi o sesiune si o asociem noului client
+                newSession = Sesion(persistent=True)    # cream noi o sesiune si o asociem noului client
                 self.sessions[package.client_id] = newSession
-            else:  # daca exista deja o sesiune, doar confirmam asta prin connack
+                newClient.associatedSession = newSession
+            else:                                       # daca exista deja o sesiune, doar confirmam asta prin connack
                 sessionAlreadyExisted = True
+                newClient.associatedSession = self.sessions[package.client_id]
 
-        ##WILL MESSAGE HANDDLELINGN ##
+         ##WILL MESSAGE HANDDLELINGN ##
 
         # if package.will_flag:
         #     newClient.willFlag = True
@@ -74,10 +76,14 @@ class ClientManager:
         newPackage.sessionAlreadyExisted = sessionAlreadyExisted
         data = newPackage.serialize()
 
-        newClient.associatedSocket.send(data)
+        mySocket.send(data)
 
-    def ProcessSUBSCRIBE(self, package, mySocket):
+    def ProcessSubscribe(self, package, mySocket):
 
+        ## MEMORIZING SUBSCRIBE TOPICS ##
+
+        ourClient = self.activeClients[mySocket]
+        ourClient.associatedSession.addTopics(  package.topicList )
         #Here we should probably do important stuffs
 
         ## SUBACK ##
@@ -88,4 +94,12 @@ class ClientManager:
         data = newPackage.serialize()
         mySocket.send(data)
 
+    def ProcessPublish(self, package, mySocket):
+        for client in self.activeClients.values():
+            session = client.associatedSession
+            self.PublishMessage(package.message, package.topic_name,   )
+        package
+
+
+    def PublishMessage(self , message, topic, qos, duplicate, retain):
         pass

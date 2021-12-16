@@ -154,7 +154,6 @@ def PUBLISH(package, data):
     fmt = str(b2_int - brah+2) + 'c'
     message = unpack(fmt, data[brah: b2_int + 2])
 
-    package.message = ""
     for x in range(0, b2_int - brah+2):
         package.message += message[x].decode("utf-8")
     print("\n Publish message:", package.message)
@@ -189,16 +188,20 @@ def SUBSCRIBE(package, data):
     topicSize = int.from_bytes(data[dataPointer:dataPointer + 2]  ,"big", signed=False)
     print(f"My topic size is {topicSize}")
 
+    #in a loop maybe
     startOfTopicPointer =  dataPointer + 2
     endOfTopicPointer = topicSize + startOfTopicPointer   #Calculam unde se termina sirul de caractere al topicului dupa dataPointer
 
     topicName = data[startOfTopicPointer:endOfTopicPointer].decode("utf-8")
     topicQoS = data[endOfTopicPointer]
 
+
     package.topicList.append((topicName, topicQoS))     #Aici inseram un touple format din numele topicului si QoS-ul
 
     #Aici ar trebui sa poata citi o lista de topicuri dar cu clientul asta, nu pare sa fie necesar aparent.
     dataPointer = endOfTopicPointer
+
+    #end of magic loop
 
 def SUBACK(package, data):
     pass

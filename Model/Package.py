@@ -36,6 +36,10 @@ class Package:
     #Connak flags
     sessionAlreadyExisted = False
 
+    #Publish
+    message = ""
+    topic_name = ""
+
     def __init__(self):
         pass
 
