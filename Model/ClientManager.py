@@ -1,3 +1,6 @@
+import time
+from datetime import datetime
+
 from Model.Tools import *
 from Model.Client import Client
 from Model.Session import Sesion
@@ -16,6 +19,8 @@ class ClientManager:
         # cautam ID-ul clientului sa vedem daca inca mai exista in lista noasta de clienti
         # daca nu exista, cram un client nou, si asamblam pachetul CONNECT
         # pe care il trimitem inapoi tot aici
+        if mySocket in self.activeClients:
+            self.activeClients[mySocket].set_time()
 
         if (package.type == PacketType.CONNECT):
             self.ProcessConnect(package, mySocket)
@@ -24,12 +29,26 @@ class ClientManager:
         elif (package.type == PacketType.PUBLISH):
             self.ProcessPublish(package, mySocket)
 
-    #This fuction exists in case the client dies before sending a disconect.
+    # This fuction exists in case the client dies before sending a disconect.
     def disconectClientWithSocket(self, mySocket):
         del self.activeClients[mySocket]
 
-    #Logica de raspuns pentru diferite pachete
+    # Logica de raspuns pentru diferite pachete
 
+    def keep_alive_check(self):
+        for x in self.activeClients.values():
+            if x.deadline <= time.time() and x.ping_sent is False:
+                newPackage = Package()
+                newPackage.type = PacketType.PINGRESP
+                data = newPackage.serialize()
+                print("sa produs")
+                x.ping_sent = True
+                x.associatedSocket.send(data)
+
+            elif x.ext_deadline <= time.time():
+                print("sa produs si asta")
+                del x
+                pass
 
     def ProcessConnect(self,package, mySocket):
         #Flags for connack
@@ -37,10 +56,16 @@ class ClientManager:
 
         ## CLIENT HANDDLELING ##
 
+        # Clientul este un obiect care exista doar pe parcursul conectiuni !!
+        if package.client_id in self.activeClients:
+            raise "This client has not been properly disconected last time."
         #Clientul este un obiect care exista doar pe parcursul conectiuni !!
         if mySocket in self.activeClients:
            raise "This client has not been properly disconected last time."
 
+        # Cream o structura de date de tip client
+        newClient = Client(package.client_id,mySocket ,package.keep_alive)
+        self.activeClients[mySocket] = newClient  # Fiecare client este identificat dupa socket-ul pe care sta ?
         #Cream o structura de date de tip client
         newClient = Client(package.client_id, mySocket)
         self.activeClients[mySocket] = newClient           #Fiecare client este identificat dupa socket-ul pe care sta ?
@@ -62,7 +87,7 @@ class ClientManager:
                 sessionAlreadyExisted = True
                 newClient.associatedSession = self.sessions[package.client_id]
 
-         ##WILL MESSAGE HANDDLELINGN ##
+        ##WILL MESSAGE HANDDLELINGN ##
 
         # if package.will_flag:
         #     newClient.willFlag = True
@@ -85,6 +110,7 @@ class ClientManager:
         ourClient = self.activeClients[mySocket]
         ourClient.associatedSession.addTopics(  package.topicList )
         #Here we should probably do important stuffs
+        # Here we should probably do important stuffs
 
         ## SUBACK ##
 
@@ -103,3 +129,9 @@ class ClientManager:
 
     def PublishMessage(self ,client, message, topic, qos, duplicate, retain):
         pass
+
+    def ProcessPINGREQ(self, package, mySocket):
+        newPackage = Package()
+        newPackage.type = PacketType.PINGREQ
+        data = newPackage.serialize()
+        mySocket.send(data)

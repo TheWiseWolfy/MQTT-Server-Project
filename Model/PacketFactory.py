@@ -10,6 +10,8 @@ def createPackage(package):
         return createCONNACK(package)
     elif package.type == PacketType.SUBACK:
         return createSUBACK(package)
+    elif package.type == PacketType.PINGRESP:
+        return createPINGRESP(package)
 
 
 def createSUBACK(package):
@@ -33,4 +35,8 @@ def createCONNACK(package):
             SP = b'\x00'
 
     data = struct.pack(format, b'\x20', b'\x02', SP, b'\x00')
+    return data
+
+def createPINGRESP(package):
+    data = struct.pack("2c", b'\xD0', b'\x00')
     return data

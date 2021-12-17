@@ -48,7 +48,7 @@ class Package:
         processPackage(self, self.type, data)
 
     def serialize(self):
-        return createPackage( self)
+        return createPackage(self)
 
 
 # This fuction can read a pachage from a socket
