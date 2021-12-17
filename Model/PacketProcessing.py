@@ -118,26 +118,26 @@ def PUBLISH(package, data):
     b2_int = int.from_bytes(b2, byteorder='big', signed=False)
 
     package.dup = b1_int & 8
-    print("\nDUP flag = ", package.dup)
+    print("DUP flag = ", package.dup)
 
     if b1_int & 6 < 6:
         if b1_int & 6 <= 1:
-            print("\nAvem QoS=0")
-            package.qos = 0
+            print("Avem QoS=0")
+            package.QoS = 0
         elif b1_int & 6 <= 3:
             print("\nAvel QoS=1")
-            package.qos = 1
+            package.QoS = 1
         elif b1_int & 6 <= 5:
             print("\nAvem QoS=2")
-            package.qos = 2
+            package.QoS = 2
     else:
         print("\nQoS invalid (=3), inchidem conexiunea")
 
     package.retain = b1_int & 1
 
     topic_name_length = int.from_bytes(b3 + b4, byteorder='big', signed=False)
-    fmt = str(topic_name_length + (2 if package.qos > 0 else 0)) + 'c'
-    tuple_pub = unpack(fmt, data[4:4 + topic_name_length + (2 if package.qos > 0 else 0)])
+    fmt = str(topic_name_length + (2 if package.QoS > 0 else 0)) + 'c'
+    tuple_pub = unpack(fmt, data[4:4 + topic_name_length + (2 if package.QoS > 0 else 0)])
 
     package.topic_name = ""
     for x in range(0, topic_name_length):
@@ -145,16 +145,15 @@ def PUBLISH(package, data):
     print("\n Topic name:", package.topic_name)
 
     package.packetIdentifier = ""
-    if package.qos > 0:
+    if package.QoS > 0:
         package.packetIdentifier = int.from_bytes(tuple_pub[topic_name_length] + tuple_pub[topic_name_length + 1],
                                                   byteorder='big', signed=False)
     print("\n Packet ID:", package.packetIdentifier)
 
-    brah = 4 + topic_name_length + (2 if package.qos > 0 else 0)
+    brah = 4 + topic_name_length + (2 if package.QoS > 0 else 0)
     fmt = str(b2_int - brah+2) + 'c'
     message = unpack(fmt, data[brah: b2_int + 2])
 
-    package.message = ""
     for x in range(0, b2_int - brah+2):
         package.message += message[x].decode("utf-8")
     print("\n Publish message:", package.message)
@@ -177,8 +176,32 @@ def PUBCOMP(package, data):
 
 
 def SUBSCRIBE(package, data):
-    pass
+    formString = 'cccc'
 
+    #Variable header
+    _, _, b1, b2, = unpack(formString, data[0: 4])
+    package.packetIdentifier =  int.from_bytes(b1 + b2 ,"big", signed=False)
+
+    #Payload
+    dataPointer = 4
+
+    topicSize = int.from_bytes(data[dataPointer:dataPointer + 2]  ,"big", signed=False)
+    print(f"My topic size is {topicSize}")
+
+    #in a loop maybe
+    startOfTopicPointer =  dataPointer + 2
+    endOfTopicPointer = topicSize + startOfTopicPointer   #Calculam unde se termina sirul de caractere al topicului dupa dataPointer
+
+    topicName = data[startOfTopicPointer:endOfTopicPointer].decode("utf-8")
+    topicQoS = data[endOfTopicPointer]
+
+
+    package.topicList.append((topicName, topicQoS))     #Aici inseram un touple format din numele topicului si QoS-ul
+
+    #Aici ar trebui sa poata citi o lista de topicuri dar cu clientul asta, nu pare sa fie necesar aparent.
+    dataPointer = endOfTopicPointer
+
+    #end of magic loop
 
 def SUBACK(package, data):
     pass

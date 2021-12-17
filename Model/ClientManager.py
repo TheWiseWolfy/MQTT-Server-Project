@@ -1,3 +1,6 @@
+import time
+from datetime import datetime
+
 from Model.Tools import *
 from Model.Client import Client
 from Model.Session import Sesion
@@ -5,8 +8,8 @@ from Model.Package import Package
 
 
 class ClientManager:
-    clients = dict()
-    sessions = dict()
+    activeClients = dict()    #A client is asociate with the lifetime of a socket
+    sessions = dict()          #A socket is associated with a client id
 
     def __init__(self):
         pass
@@ -16,51 +19,113 @@ class ClientManager:
         # cautam ID-ul clientului sa vedem daca inca mai exista in lista noasta de clienti
         # daca nu exista, cram un client nou, si asamblam pachetul CONNECT
         # pe care il trimitem inapoi tot aici
+        if mySocket in self.activeClients:
+            self.activeClients[mySocket].set_time()
 
         if (package.type == PacketType.CONNECT):
-            newClient = None
-            sessionAlreadyExisted = False
+            self.ProcessConnect(package, mySocket)
+        elif (package.type == PacketType.SUBSCRIBE):
+            self.ProcessSubscribe(package, mySocket)
+        elif (package.type == PacketType.PUBLISH):
+            self.ProcessPublish(package, mySocket)
 
-            ## CLIENT HANDDLELING ##
+    # This fuction exists in case the client dies before sending a disconect.
+    def disconectClientWithSocket(self, mySocket):
+        del self.activeClients[mySocket]
 
-            if package.client_id not in self.clients:
-                newClient = Client(package.client_id)
-                newClient.socket = mySocket    #aici asociem fiecare socket cu un client
-                self.clients[package.client_id] = newClient
-            else:
-                raise "this is not allowed buddy"
+    # Logica de raspuns pentru diferite pachete
 
+    def keep_alive_check(self):
+        for x in self.activeClients.values():
+            if x.deadline <= time.time() and x.ping_sent is False:
+                newPackage = Package()
+                newPackage.type = PacketType.PINGRESP
+                data = newPackage.serialize()
+                print("sa produs")
+                x.ping_sent = True
+                x.associatedSocket.send(data)
 
-            ## SESSION HANDDLELING ##
-            if package.clearSession:        # Daca clear session este setat pe 1
-                if package.client_id in self.sessions:
-                    del self.sessions[package.client_id]
+            elif x.ext_deadline <= time.time():
+                print("sa produs si asta")
+                del x
+                pass
 
-                newSession = Sesion(persistent=False)       #cream o sesiune noua menita sa fie temporara
+    def ProcessConnect(self,package, mySocket):
+        #Flags for connack
+        sessionAlreadyExisted = False
+
+        ## CLIENT HANDDLELING ##
+
+        #Clientul este un obiect care exista doar pe parcursul conectiuni !!
+        if mySocket in self.activeClients:
+           raise "This client has not been properly disconected last time."
+
+        # Cream o structura de date de tip client
+        newClient = Client(package.client_id, mySocket , package.keep_alive)
+        self.activeClients[mySocket] = newClient  # Fiecare client este identificat dupa socket-ul pe care sta ?
+
+        ## SESSION HANDDLELING ##
+        if package.clearSession:  # Daca clear session este setat pe 1
+            if package.client_id in self.sessions:
+                del self.sessions[package.client_id]                #Daca gasim o sesiune, o stergem
+
+            newSession = Sesion(persistent=False)           # cream o sesiune noua menita sa fie temporara
+            self.sessions[package.client_id] = newSession
+            newClient.associatedSession = newSession         #Asociem momentan clientul cu sesiunea
+        else:                                           # Daca clear session este setat pe 0
+            if package.client_id not in self.sessions:  # daca nu exista o sesiune existenta pentru client id-ul curent
+                newSession = Sesion(persistent=True)    # cream noi o sesiune si o asociem noului client
                 self.sessions[package.client_id] = newSession
-                newClient.currentSession = newSession
-            else:                            # Daca clear session este setat pe 0
-                if package.client_id not in self.sessions:       #daca nu exista o sesiune existenta pentru client id-ul curent
+                newClient.associatedSession = newSession
+            else:                                       # daca exista deja o sesiune, doar confirmam asta prin connack
+                sessionAlreadyExisted = True
+                newClient.associatedSession = self.sessions[package.client_id]
 
-                    newSession = Sesion(persistent=True)        #cream noi o sesiune si o asociem noului client
-                    self.sessions[package.client_id] = newSession
-                    newClient.currentSession = newSession
-                else:                                            #daca exista deja o sesiune, doar o reasociem
-                    newClient.currentSession = self.sessions[package.client_id]
-                    sessionAlreadyExisted = True
+        ##WILL MESSAGE HANDDLELINGN ##
 
-            ##WILL MESSAGE HANDDLELINGN ##
+        # if package.will_flag:
+        #     newClient.willFlag = True
+        #     newClient.willMessage = "I guess someone forgot to implement the actual WILL MESSAGEEEEEEEEEEE"
 
-            if package.will_flag:
-                newClient.willFlag = True
-                newClient.willMessage = "I guess someone forgot to implement the actual WILL MESSAGEEEEEEEEEEE"
+        ## CONNACK ##
 
-            ## CONNACK ##
+        newPackage = Package()
+        newPackage.type = PacketType.CONNACK
+        newPackage.clearSession = package.clearSession  # We keep this data in order to form the CONNAK properly
+        newPackage.sessionAlreadyExisted = sessionAlreadyExisted
+        data = newPackage.serialize()
 
-            newPackage = Package()
-            newPackage.type = PacketType.CONNACK
-            newPackage.clearSession = package.clearSession #We keep this data in order to form the CONNAK properly
-            newPackage.sessionAlreadyExisted = sessionAlreadyExisted
-            data = newPackage.serialize()
+        mySocket.send(data)
 
-            newClient.socket.send(data)
+    def ProcessSubscribe(self, package, mySocket):
+
+        ## MEMORIZING SUBSCRIBE TOPICS ##
+
+        ourClient = self.activeClients[mySocket]
+        ourClient.associatedSession.addTopics(  package.topicList )
+        #Here we should probably do important stuffs
+        # Here we should probably do important stuffs
+
+        ## SUBACK ##
+
+        newPackage = Package()
+        newPackage.type = PacketType.SUBACK
+        newPackage.packetIdentifier = package.packetIdentifier
+        data = newPackage.serialize()
+        mySocket.send(data)
+
+    def ProcessPublish(self, package, mySocket):
+        for client in self.activeClients.values():
+            session = client.associatedSession
+            value = (package.topic_name, package.QoS)
+            if value  in session.subscribedTopics:
+                self.PublishMessage(client, package.message, package.topic_name, 0, 0, 0)
+
+    def PublishMessage(self ,client, message, topic, qos, duplicate, retain):
+        pass
+
+    def ProcessPINGREQ(self, package, mySocket):
+        newPackage = Package()
+        newPackage.type = PacketType.PINGREQ
+        data = newPackage.serialize()
+        mySocket.send(data)

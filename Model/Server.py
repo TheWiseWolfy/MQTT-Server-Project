@@ -92,6 +92,7 @@ class MQTTServer:
                 continue
 
             selectedSockets, _, _ = select.select(self.socketList, [], [], 1)
+            self.clientManager.keep_alive_check()
 
             if selectedSockets:
                 for mySocket in selectedSockets:
@@ -100,15 +101,16 @@ class MQTTServer:
                     if not data:
                         # cand ajungem aici PRESUPUNEM ca pachetul de disconec a fost primti deja
                         self.socketList.remove(mySocket)
+                        self.clientManager.disconectClientWithSocket(mySocket)
                         mySocket.close()
 
                     else:
-                        print(data) #exista
                         newPackage = Package()
                         newPackage.deserialize(data)
 
                         # this is the final objective
                         self.clientManager.applyPachage(newPackage, mySocket)
+
 
     # This is not stupid, and actually very smart.
     def serverISKill(self):
