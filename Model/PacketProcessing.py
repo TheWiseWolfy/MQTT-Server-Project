@@ -123,21 +123,21 @@ def PUBLISH(package, data):
     if b1_int & 6 < 6:
         if b1_int & 6 <= 1:
             print("Avem QoS=0")
-            package.qos = 0
+            package.QoS = 0
         elif b1_int & 6 <= 3:
             print("\nAvel QoS=1")
-            package.qos = 1
+            package.QoS = 1
         elif b1_int & 6 <= 5:
             print("\nAvem QoS=2")
-            package.qos = 2
+            package.QoS = 2
     else:
         print("\nQoS invalid (=3), inchidem conexiunea")
 
     package.retain = b1_int & 1
 
     topic_name_length = int.from_bytes(b3 + b4, byteorder='big', signed=False)
-    fmt = str(topic_name_length + (2 if package.qos > 0 else 0)) + 'c'
-    tuple_pub = unpack(fmt, data[4:4 + topic_name_length + (2 if package.qos > 0 else 0)])
+    fmt = str(topic_name_length + (2 if package.QoS > 0 else 0)) + 'c'
+    tuple_pub = unpack(fmt, data[4:4 + topic_name_length + (2 if package.QoS > 0 else 0)])
 
     package.topic_name = ""
     for x in range(0, topic_name_length):
@@ -145,12 +145,12 @@ def PUBLISH(package, data):
     print("\n Topic name:", package.topic_name)
 
     package.packetIdentifier = ""
-    if package.qos > 0:
+    if package.QoS > 0:
         package.packetIdentifier = int.from_bytes(tuple_pub[topic_name_length] + tuple_pub[topic_name_length + 1],
                                                   byteorder='big', signed=False)
     print("\n Packet ID:", package.packetIdentifier)
 
-    brah = 4 + topic_name_length + (2 if package.qos > 0 else 0)
+    brah = 4 + topic_name_length + (2 if package.QoS > 0 else 0)
     fmt = str(b2_int - brah+2) + 'c'
     message = unpack(fmt, data[brah: b2_int + 2])
 

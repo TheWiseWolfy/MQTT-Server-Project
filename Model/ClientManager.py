@@ -97,9 +97,9 @@ class ClientManager:
     def ProcessPublish(self, package, mySocket):
         for client in self.activeClients.values():
             session = client.associatedSession
-            self.PublishMessage(package.message, package.topic_name,   )
-        package
+            value = (package.topic_name, package.QoS)
+            if value  in session.subscribedTopics:
+                self.PublishMessage(client, package.message, package.topic_name, 0, 0, 0)
 
-
-    def PublishMessage(self , message, topic, qos, duplicate, retain):
+    def PublishMessage(self ,client, message, topic, qos, duplicate, retain):
         pass
