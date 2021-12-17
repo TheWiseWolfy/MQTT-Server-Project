@@ -56,19 +56,13 @@ class ClientManager:
 
         ## CLIENT HANDDLELING ##
 
-        # Clientul este un obiect care exista doar pe parcursul conectiuni !!
-        if package.client_id in self.activeClients:
-            raise "This client has not been properly disconected last time."
         #Clientul este un obiect care exista doar pe parcursul conectiuni !!
         if mySocket in self.activeClients:
            raise "This client has not been properly disconected last time."
 
         # Cream o structura de date de tip client
-        newClient = Client(package.client_id,mySocket ,package.keep_alive)
+        newClient = Client(package.client_id, mySocket , package.keep_alive)
         self.activeClients[mySocket] = newClient  # Fiecare client este identificat dupa socket-ul pe care sta ?
-        #Cream o structura de date de tip client
-        newClient = Client(package.client_id, mySocket)
-        self.activeClients[mySocket] = newClient           #Fiecare client este identificat dupa socket-ul pe care sta ?
 
         ## SESSION HANDDLELING ##
         if package.clearSession:  # Daca clear session este setat pe 1
