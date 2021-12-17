@@ -19,6 +19,8 @@ class ClientManager:
         # cautam ID-ul clientului sa vedem daca inca mai exista in lista noasta de clienti
         # daca nu exista, cram un client nou, si asamblam pachetul CONNECT
         # pe care il trimitem inapoi tot aici
+        if mySocket in self.activeClients:
+            self.activeClients[mySocket].set_time()
 
         if (package.type == PacketType.CONNECT):
             self.ProcessConnect(package, mySocket)
@@ -34,13 +36,14 @@ class ClientManager:
 
     def keep_alive_check(self):
         for x in self.activeClients.values():
-            if x.deadline <= time.time() and x.ping_sent == False:
+            if x.deadline <= time.time() and x.ping_sent is False:
                 newPackage = Package()
-                newPackage.type = PacketType.PUBREQ
+                newPackage.type = PacketType.PINGRESP
                 data = newPackage.serialize()
                 print("sa produs")
-                x.ping_sent=True
-                # mySocket.send(data)
+                x.ping_sent = True
+                x.associatedSocket.send(data)
+
             elif x.ext_deadline <= time.time():
                 print("sa produs si asta")
                 del x
@@ -105,3 +108,9 @@ class ClientManager:
         mySocket.send(data)
 
         pass
+
+    def ProcessPINGREQ(self, package, mySocket):
+        newPackage = Package()
+        newPackage.type = PacketType.PINGREQ
+        data = newPackage.serialize()
+        mySocket.send(data)

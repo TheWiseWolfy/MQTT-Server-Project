@@ -13,10 +13,14 @@ class Client:
     def __init__(self, clientID, keep_alive):
         self.clientID = clientID
         self.keep_alive = keep_alive
-        self.time = time.time()
-        self.deadline = self.time + keep_alive
-        self.ext_deadline = self.deadline + keep_alive / 2
-        self.ping_sent=False
+        self.set_time()
+
 
     def applyPachage(self, Pachage):
         pass
+
+    def set_time(self):
+        self.time = time.time()
+        self.deadline = self.time + self.keep_alive
+        self.ext_deadline = self.deadline + self.keep_alive / 2
+        self.ping_sent = False
