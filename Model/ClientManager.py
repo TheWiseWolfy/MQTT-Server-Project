@@ -8,11 +8,12 @@ from Model.Package import Package
 
 
 class ClientManager:
-    activeClients = dict()    #A client is asociate with the lifetime of a socket
-    sessions = dict()          #A socket is associated with a client id
+    activeClients = dict()    #A client is asociated with the lifetime of a socket
+    sessions = dict()         #A socket is associated with a client id
+    server = None
 
-    def __init__(self):
-        pass
+    def __init__(self, server):
+        self.server = server
 
     def applyPachage(self, package, mySocket):
         # Daca detectam un pachet de tip CONNECT
@@ -20,7 +21,7 @@ class ClientManager:
         # daca nu exista, cram un client nou, si asamblam pachetul CONNECT
         # pe care il trimitem inapoi tot aici
         if mySocket in self.activeClients:
-            self.activeClients[mySocket].set_time()
+            self.activeClients[mySocket].resetTime()
 
         if (package.type == PacketType.CONNECT):
             self.ProcessConnect(package, mySocket)
@@ -28,6 +29,8 @@ class ClientManager:
             self.ProcessSubscribe(package, mySocket)
         elif (package.type == PacketType.PUBLISH):
             self.ProcessPublish(package, mySocket)
+        elif (package.type == PacketType.DISCONNECT):
+            self.ProcessDisconect(package, mySocket)
 
     # This fuction exists in case the client dies before sending a disconect.
     def disconectClientWithSocket(self, mySocket):
@@ -112,20 +115,39 @@ class ClientManager:
         newPackage.type = PacketType.SUBACK
         newPackage.packetIdentifier = package.packetIdentifier
         data = newPackage.serialize()
+
         mySocket.send(data)
 
     def ProcessPublish(self, package, mySocket):
         for client in self.activeClients.values():
             session = client.associatedSession
             value = (package.topic_name, package.QoS)
-            if value  in session.subscribedTopics:
-                self.PublishMessage(client, package.message, package.topic_name, 0, 0, 0)
 
-    def PublishMessage(self ,client, message, topic, qos, duplicate, retain):
-        pass
+            if value  in session.subscribedTopics:
+                data = package.serialize()
+                mySocket.send(data)
+
 
     def ProcessPINGREQ(self, package, mySocket):
         newPackage = Package()
         newPackage.type = PacketType.PINGREQ
         data = newPackage.serialize()
         mySocket.send(data)
+
+
+    def ProcessDisconect(self, package, mySocket):
+      self.disconectClientSafely(mySocket)
+
+
+#_________________________UTILITY FUCTIONS_________________________
+
+    def disconectClientSafely(self, mySocket ):
+        # Will also need to discard any last will messages.
+
+        self.activeClients.pop(mySocket)
+
+        # It's really important to remove the socket from the select list before trying to close it.
+        self.server.removeSocketFromList( mySocket)
+        mySocket.close()
+
+        print(f"{bcol.OKBLUE}Client successfully disconnected.{bcol.ENDC}")

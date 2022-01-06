@@ -2,7 +2,7 @@ from Model.Tools import *
 from struct import *
 
 
-def processPackage(package, type, data):
+def processPackage(package, data):
     switcher = {
         PacketType.CONNECT: CONNECT,
         PacketType.CONNACK: CONNACK,
@@ -19,91 +19,103 @@ def processPackage(package, type, data):
         PacketType.PINGRESP: PINGRESP,
         PacketType.DISCONNECT: DISCONNECT,
     }
-    func = switcher.get(type)
+    func = switcher.get(package.type)
     return func(package, data)
 
 
 def CONNECT(package, data):
-    formString = 'cccccccccccccc'
+    formString = '12c'
 
-    _, _, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12 = unpack(formString, data[0: 14])
+    _, _, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10 = unpack(formString, data[0: 12])
 
-    if b1 == b'\x00' and b2 == b'\x04' and b3 == b'M' and b4 == b'Q' and b5 == b6 == b'T' and b7:
-        print("\nAvem un nume protocol CONNECT valid")
-    else:
-        print("\n Protocol Name invalid")
+    if not (
+            b1 == b'\x00' and b2 == b'\x04' and b3 == b'M' and b4 == b'Q' and b5 == b'T' and b6 == b'T' and b7 == b'\x04'):
+        raise RuntimeError('Protocol Name invalid')
 
-    if b5 == b'T':
-        print("\nAvem un protocol level CONNECT valid")
-    else:
-        print("\n Protocol Level invalid")
     b8_int = int.from_bytes(b8, byteorder='big', signed=False)
-    if b8_int & 1 == 0:
-        print("\nBitul reserved este 0, and that's good")
-    else:
-        print("\nBitul reserved nu este 0, cerem deconectarea clientului")
 
+    if not (b8_int & 1 == 0):
+        raise RuntimeError('Bitul reserved nu este 0, cerem deconectarea clientului')
+
+    # Clear session
     if b8_int & 2 == 2:
         package.clearSession = True
-        print("\nBitul CleanSession este 1")
     else:
         package.clearSession = False
-        print("\nBitul CleanSession este 0")
+        raise RuntimeError("Bitul CleanSession este 0")
 
+    # Will retain
     if b8_int & 4 == 4:
         package.will_flag = True
-        print("\nAfisam un Will Message")
+        # print("\nAfisam un Will Message")
         if b8_int & 32 == 32:
             package.will_retain = True
-            print("\nWill Message va fi retinut, will retain=1")
+            # print("\nWill Message va fi retinut, will retain=1")
         else:
             package.will_retain = False
-            print("\nWill Message NU va fi retinut, will retain=0")
+            # print("\nWill Message NU va fi retinut, will retain=0")
     else:
         package.will_flag = False
-        package.will_retain = False  # nu stiu daca asa functioneaza randul 509 din documentatie
-        print("\nNu afisam un Will Message")
+        package.will_retain = False
+        # nu stiu daca asa functioneaza randul 509 din documentatie
+        # figure it out loser
+        # print("\nNu afisam un Will Message")
 
+    # QoS
     if b8_int & 24 < 24:
         if b8_int & 24 <= 7:
-            print("\nAvem Will QoS=0")
+            #print("Avem Will QoS=0")
             package.will_qos = 0
         elif b8_int & 24 <= 15:
-            print("\nAvel Will QoS=1")
+            #print("Avel Will QoS=1")
             package.will_qos = 1
         elif b8_int & 24 <= 23:
-            print("\nAvem Will QoS=2")
+            #print("Avem Will QoS=2")
             package.will_qos = 2
     else:
-        print("\nWill QoS invalid(=3)")
+        pass
+        #print("Will QoS invalid(=3)")
 
+    # User name and password flags
     if b8_int & 128 == 128:
         package.username = True
-        print("\nTrebuie sa avem un username in payload")
+        # print("\nTrebuie sa avem un username in payload")
     else:
         package.username = False
-        package.password = True
-        print("\nNU trebuie sa avem un username in payload, implicit nici o parola")  # nesigur si aici, randul 525
+        package.password = False  # Here lied a stupid mistake by a stupid man
+        # print("\nNU trebuie sa avem un username in payload, implicit nici  parola")  # nesigur si aici, randul 525
 
     if b8_int & 64 == 64:
         package.password = True
-        print("\nTrebuie sa avem o parola in payload")
+        # print("\nTrebuie sa avem o parola in payload")
     else:
         package.password = False
-        print("\nNU trebuie sa avem o parola in payload")
+        # print("\nNU trebuie sa avem o parola in payload")
 
     package.keep_alive = int.from_bytes(b9 + b10, byteorder='big', signed=False)
-    print("\nKeep alive =", package.keep_alive, "secunde")
+    print("Keep alive =", package.keep_alive, "secunde\n")
 
+    # _____PAYLOAD______
+    # These fields, if present, MUST appear in the order Client Identifier, Will Topic, Will Message, User Name, Password
+    pointer = 12
+    b11, b12 = unpack('cc', data[pointer: pointer +2])
+
+    # Client Identifier
     client_id_length = int.from_bytes(b11 + b12, byteorder='big', signed=False)
-    fmt = str(client_id_length) + 'c'
 
-    id_tuple = unpack(fmt, data[14:14 + client_id_length])
-    package.client_id = ""
+    formatString = str(client_id_length) + 'c'
+    id_tuple = unpack(formatString, data[14:14 + client_id_length])
+
     for x in id_tuple:
         package.client_id += x.decode("utf-8")
-    print('\n', package.client_id)
+    print( package.client_id + '\n')
 
+    # Will topic
+
+  #  if (package.will_flag):
+        #will_message_length = int.from_bytes(b11 + b12, byteorder='big', signed=False)
+
+    # somebody know why this here ?
     package.QoS = 0
 
 
@@ -125,13 +137,13 @@ def PUBLISH(package, data):
             print("Avem QoS=0")
             package.QoS = 0
         elif b1_int & 6 <= 3:
-            print("\nAvel QoS=1")
+            print("Avel QoS=1")
             package.QoS = 1
         elif b1_int & 6 <= 5:
-            print("\nAvem QoS=2")
+            print("Avem QoS=2")
             package.QoS = 2
     else:
-        print("\nQoS invalid (=3), inchidem conexiunea")
+        print("QoS invalid (=3), inchidem conexiunea")
 
     package.retain = b1_int & 1
 
@@ -142,21 +154,21 @@ def PUBLISH(package, data):
     package.topic_name = ""
     for x in range(0, topic_name_length):
         package.topic_name += tuple_pub[x].decode("utf-8")
-    print("\n Topic name:", package.topic_name)
+    print("Topic name:", package.topic_name)
 
     package.packetIdentifier = ""
     if package.QoS > 0:
         package.packetIdentifier = int.from_bytes(tuple_pub[topic_name_length] + tuple_pub[topic_name_length + 1],
                                                   byteorder='big', signed=False)
-    print("\n Packet ID:", package.packetIdentifier)
+    print("Packet ID:", package.packetIdentifier)
 
     brah = 4 + topic_name_length + (2 if package.QoS > 0 else 0)
-    fmt = str(b2_int - brah+2) + 'c'
+    fmt = str(b2_int - brah + 2) + 'c'
     message = unpack(fmt, data[brah: b2_int + 2])
 
-    for x in range(0, b2_int - brah+2):
+    for x in range(0, b2_int - brah + 2):
         package.message += message[x].decode("utf-8")
-    print("\n Publish message:", package.message)
+    print("Publish message:", package.message)
 
 
 def PUBACK(package, data):
@@ -178,30 +190,30 @@ def PUBCOMP(package, data):
 def SUBSCRIBE(package, data):
     formString = 'cccc'
 
-    #Variable header
+    # Variable header
     _, _, b1, b2, = unpack(formString, data[0: 4])
-    package.packetIdentifier =  int.from_bytes(b1 + b2 ,"big", signed=False)
+    package.packetIdentifier = int.from_bytes(b1 + b2, "big", signed=False)
 
-    #Payload
+    # Payload
     dataPointer = 4
 
-    topicSize = int.from_bytes(data[dataPointer:dataPointer + 2]  ,"big", signed=False)
+    topicSize = int.from_bytes(data[dataPointer:dataPointer + 2], "big", signed=False)
     print(f"My topic size is {topicSize}")
 
-    #in a loop maybe
-    startOfTopicPointer =  dataPointer + 2
-    endOfTopicPointer = topicSize + startOfTopicPointer   #Calculam unde se termina sirul de caractere al topicului dupa dataPointer
+    # in a loop maybe
+    startOfTopicPointer = dataPointer + 2
+    endOfTopicPointer = topicSize + startOfTopicPointer  # Calculam unde se termina sirul de caractere al topicului dupa dataPointer
 
     topicName = data[startOfTopicPointer:endOfTopicPointer].decode("utf-8")
     topicQoS = data[endOfTopicPointer]
 
+    package.topicList.append((topicName, topicQoS))  # Aici inseram un touple format din numele topicului si QoS-ul
 
-    package.topicList.append((topicName, topicQoS))     #Aici inseram un touple format din numele topicului si QoS-ul
-
-    #Aici ar trebui sa poata citi o lista de topicuri dar cu clientul asta, nu pare sa fie necesar aparent.
+    # Aici ar trebui sa poata citi o lista de topicuri dar cu clientul asta, nu pare sa fie necesar aparent.
     dataPointer = endOfTopicPointer
 
-    #end of magic loop
+    # end of magic loop
+
 
 def SUBACK(package, data):
     pass

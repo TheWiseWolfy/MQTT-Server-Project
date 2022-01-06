@@ -14,7 +14,7 @@ class Client:
     def __init__(self, clientID, associatedSocket,keep_alive):
         self.clientID = clientID
         self.keep_alive = keep_alive
-        self.set_time()
+        self.resetTime()
 
         self.associatedSocket = associatedSocket
 
@@ -23,7 +23,7 @@ class Client:
 
 
 
-    def set_time(self):
+    def resetTime(self):
         self.time = time.time()
         self.deadline = self.time + self.keep_alive
         self.ext_deadline = self.deadline + self.keep_alive / 2

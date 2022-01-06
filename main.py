@@ -126,6 +126,7 @@ class App:
         if self.running is True:
             App.server.serverISKill()
             self.running = False
+
     @staticmethod
     def add_element(self,str):
         self.GListBox_787.insert(str)
@@ -136,17 +137,8 @@ def main():
     root.mainloop()
     sys.exit()
 
-
-#  while (True):
-#      input1 = input()
-#      if input1 == 's':
-#          server.serverISKill()
-#          break
-
-
 if __name__ == "__main__":
     main()
-
 
 # Server MQTT
 # Vizualizare clienți conectați și abonați, deconectare forțată client

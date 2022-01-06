@@ -13,7 +13,7 @@ class Package:
     QoS = None  # PUBLISH Quality of Service
     retain = False  # PUBLISH Retain flag
     packetIdentifier = 0
-    client_id = None
+    client_id = ''
 
     #Subscribe
     topicList = list()
@@ -45,7 +45,7 @@ class Package:
 
     def deserialize(self, data):
         self.type = ProcessFixedHeader(data)
-        processPackage(self, self.type, data)
+        processPackage(self, data)
 
     def serialize(self):
         return createPackage(self)
@@ -61,7 +61,7 @@ def readPackage(socket):
     else:
         return 0
 
-    #The pachage includes packages bigger than 128 bytes but we don't for now.
+    #The standard includes packages bigger than 128 bytes but we don't for now.
     packageBites += socket.recv(remainingLengthOfPackage)
 
     return packageBites
