@@ -99,11 +99,11 @@ class MQTTServer:
 
             if selectedSockets:
                 for mySocket in selectedSockets:
-                    data = readPackage(mySocket)
-                    if not data:
-                        # cand ajungem aici PRESUPUNEM ca pachetul de disconec a fost primti deja
-                        self.socketList.remove(mySocket)
-                        self.clientManager.disconectClientSafely(mySocket)
+
+                    try:
+                        data = readPackage(mySocket)
+                    except Exception as e:
+                        self.clientManager.clientSocketFailed(mySocket)
 
                     else:
                         newPackage = Package()

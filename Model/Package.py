@@ -27,6 +27,8 @@ class Package:
         self.will_flag = None
         self.will_retain = None
         self.will_qos = None
+        self.will_message = ''
+        self.will_topic = ''
 
         # Authentification
         self.username = None
@@ -66,8 +68,7 @@ def readPackage(socket):
 
         return packageBites
     except Exception:
-        print(f"{bcol.WARNING}Client unexpectedly disconected.{bcol.ENDC}")
-        return None
+        raise Exception("Socket failed")
 
     # def lengthDecode(socket):
 #     res = 0

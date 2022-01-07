@@ -141,10 +141,10 @@ if __name__ == "__main__":
     main()
 
 # Server MQTT
-# Vizualizare clienți conectați și abonați, deconectare forțată client
-# Vizualizarea istoricului pentru ultimele 10 valori publicate/topic
-# Autentificare clienți
-# Implementare mecanism KeepAlive
-# Implementare QoS 0,1,2
-# Implementare funcție de reținere (retain) a mesajelor
-# Implementare mecanism LastWill
+# Vizualizare clienți conectați și abonați, deconectare forțată client   -naah
+# Vizualizarea istoricului pentru ultimele 10 valori publicate/topic    -naah
+# Autentificare clienți   -naah
+# Implementare mecanism KeepAlive   -maybe ?
+# Implementare QoS 0,1,2  -naah
+# Implementare funcție de reținere (retain) a mesajelor  -trying my best
+# Implementare mecanism LastWill  -trying my best

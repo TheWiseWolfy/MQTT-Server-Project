@@ -4,22 +4,23 @@ import time
 class Client:
 
     def __init__(self, clientID, associatedSocket,keep_alive):
-        self.clientID = clientID
-        self.keep_alive = keep_alive
-        self.resetTime()
-
         self.associatedSocket = associatedSocket
+        self.associatedSession = None
 
+        self.clientID = clientID
+        self.safelyDisconnected = False
+
+        #Keep alive
+        self.keep_alive = keep_alive
         self.time = None
         self.deadline = None
         self.ext_deadline = None
         self.ping_sent = None
-        self.associatedSession = None
 
-    def applyPachage(self, Pachage):
-        pass
-
-
+        #Last will
+        self.willFlag = False
+        self.willTopic = None
+        self.willMessage = None
 
     def resetTime(self):
         self.time = time.time()

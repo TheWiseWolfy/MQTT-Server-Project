@@ -93,30 +93,39 @@ def CONNECT(package, data):
         # print("\nNU trebuie sa avem o parola in payload")
 
     package.keep_alive = int.from_bytes(b9 + b10, byteorder='big', signed=False)
-    print("Keep alive =", package.keep_alive, "secunde\n")
+    print("Keep alive =", package.keep_alive, "secunde")
 
     # _____PAYLOAD______
     # These fields, if present, MUST appear in the order Client Identifier, Will Topic, Will Message, User Name, Password
     pointer = 12
-    b11, b12 = unpack('cc', data[pointer: pointer +2])
 
+    b11, b12 = unpack('cc', data[pointer: pointer +2])
     # Client Identifier
     client_id_length = int.from_bytes(b11 + b12, byteorder='big', signed=False)
 
-    formatString = str(client_id_length) + 'c'
-    id_tuple = unpack(formatString, data[14:14 + client_id_length])
+    pointer = pointer + 2
+    package.client_id += data[pointer:pointer + client_id_length].decode("utf-8")
+    print(f'Client id: {package.client_id}')
 
-    for x in id_tuple:
-        package.client_id += x.decode("utf-8")
-    print( package.client_id + '\n')
+    pointer = pointer + client_id_length
 
     # Will topic
+    if (package.will_flag):
+        b13, b14 = unpack('cc', data[pointer: pointer + 2])
+        will_topic_length = int.from_bytes(b13 + b14, byteorder='big', signed=False)
+        pointer = pointer + 2
+        package.will_topic +=  data[pointer:pointer + will_topic_length].decode("utf-8")
+        print(f'Client will topic: { package.will_topic}')
 
-  #  if (package.will_flag):
-        #will_message_length = int.from_bytes(b11 + b12, byteorder='big', signed=False)
+        pointer = pointer + will_topic_length
+
+        b15, b16 = unpack('cc', data[pointer: pointer + 2])
+        will_message_length = int.from_bytes(b15 + b16, byteorder='big', signed=False)
+        pointer = pointer + 2
+        package.will_message +=  data[pointer:pointer + will_message_length].decode("utf-8")
+        print(f'Client will message: { package.will_message}')
 
     # somebody know why this here ?
-    package.QoS = 0
 
 
 def CONNACK(package, data):
