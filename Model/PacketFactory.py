@@ -3,6 +3,9 @@ import struct
 from Model.Tools import *
 from struct import *
 
+
+
+
 def createPackage(package):
     if package.type == PacketType.CONNACK:
         return createCONNACK(package)
@@ -10,6 +13,8 @@ def createPackage(package):
         return createSUBACK(package)
     elif package.type == PacketType.PINGRESP:
         return createPINGRESP(package)
+    elif package.type == PacketType.PINGREQ:
+        return createPINGREQ(package)
     elif package.type == PacketType.PUBLISH:
         return createPUBLISH(package)
 
@@ -36,6 +41,11 @@ def createCONNACK(package):
             SP = b'\x00'
 
     data = struct.pack(format, b'\x20', b'\x02', SP, b'\x00')
+    return data
+
+
+def createPINGREQ(package):
+    data = struct.pack("2c", b'\xC0', b'\x00')
     return data
 
 

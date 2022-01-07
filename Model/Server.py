@@ -96,6 +96,7 @@ class MQTTServer:
                 continue
 
             selectedSockets, _, _ = select.select(self.socketList, [], [], 1)
+            self.clientManager.keepAliveCheck()
 
             if selectedSockets:
                 for mySocket in selectedSockets:

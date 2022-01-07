@@ -93,6 +93,9 @@ def CONNECT(package, data):
         # print("\nNU trebuie sa avem o parola in payload")
 
     package.keep_alive = int.from_bytes(b9 + b10, byteorder='big', signed=False)
+
+    #package.keep_alive = 10   #THOOOOOOOOOOOOOOOOOOOO THIS IS FOR TESTING
+
     print("Keep alive =", package.keep_alive, "secunde")
 
     # _____PAYLOAD______

@@ -147,4 +147,4 @@ if __name__ == "__main__":
 # Implementare mecanism KeepAlive   -maybe ?
 # Implementare QoS 0,1,2  -naah
 # Implementare funcție de reținere (retain) a mesajelor  -trying my best
-# Implementare mecanism LastWill  -trying my best
+# Implementare mecanism LastWill  -done I think ?

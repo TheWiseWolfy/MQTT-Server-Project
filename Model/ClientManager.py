@@ -29,23 +29,26 @@ class ClientManager:
             self.ProcessDisconnected(package, mySocket)
         elif (package.type == PacketType.PINGREQ):
             self.ProcessPINGREQ(package, mySocket)
+        elif (package.type == PacketType.PINGRESP):
+            print(f"{bcol.OKBLUE}Received ping from client.{bcol.ENDC}")
 
     # Logica de raspuns pentru diferite pachete
 
-    def keep_alive_check(self):
-        for x in self.activeClients.values():
-            if x.deadline <= time.time() and x.ping_sent is False:
-                newPackage = Package()
-                newPackage.type = PacketType.PINGRESP
-                data = newPackage.serialize()
-                print("sa produs")
-                x.ping_sent = True
-                x.associatedSocket.send(data)
+    def keepAliveCheck(self):
+        for client in self.activeClients.values():
+            if client.deadline <= time.time() and client.ping_sent is False:
 
-            elif x.ext_deadline <= time.time():
+                newPackage = Package()
+                newPackage.type = PacketType.PINGREQ        #Noi trimitem request daca trece prea mult timp ?
+                data = newPackage.serialize()
+                client.associatedSocket.send(data)
+                client.ping_sent = True
+
+                print(f"{bcol.WARNING}Checking client inactivity.{bcol.ENDC}")
+
+            elif client.ext_deadline <= time.time():
                 print("sa produs si asta")
-                del x
-                pass
+                self.clientSocketFailed(client.associatedSocket)
 
     def ProcessConnect(self, package, mySocket):
         # Presupunem ca nu exista sesiune
@@ -76,6 +79,10 @@ class ClientManager:
             else:  # daca exista deja o sesiune, doar confirmam asta prin connack
                 sessionAlreadyExisted = True
                 newClient.associatedSession = self.persistentSessions[package.client_id]
+
+        #Calculate the time the client got into the system
+
+        newClient.resetTime()
 
         ##WILL MESSAGE HANDDLELINGN ##
 
