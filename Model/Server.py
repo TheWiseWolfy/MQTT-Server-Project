@@ -9,21 +9,23 @@ from Model.ClientManager import ClientManager
 FORMAT = 'utf-8'
 
 class MQTTServer:
-    settings.debugMode = False
 
-    port = 1883  # Default MQTT Port
-
-    socketList = list()
-    clientManager = None
-
-    running = False  # The status of the server
-
-    serverIP = 0  # Ip used by the server
-    serverSocket = None  # The socket used for listening to new clients
-    serverThread = None
-    receiveThread = None
 
     def __init__(self):
+        settings.debugMode = False
+
+        self.port = 1883  # Default MQTT Port
+
+        self.socketList = list()
+        self.clientManager = None
+
+        self.running = False  # The status of the server
+
+        self.serverIP = 0  # Ip used by the server
+        self.serverSocket = None  # The socket used for listening to new clients
+        self.serverThread = None
+        self.receiveThread = None
+
         # Figure out primary ip of the machine. Will fail if weird network adapters are not turned off.
         hostname = socket.gethostname()
         self.serverIP = socket.gethostbyname(hostname)
@@ -98,13 +100,11 @@ class MQTTServer:
             if selectedSockets:
                 for mySocket in selectedSockets:
                     data = readPackage(mySocket)
-
-
                     if not data:
                         # cand ajungem aici PRESUPUNEM ca pachetul de disconec a fost primti deja
                         self.socketList.remove(mySocket)
-                        self.clientManager.disconectClientWithSocket(mySocket)
-                        mySocket.close()
+                        self.clientManager.disconectClientSafely(mySocket)
+
                     else:
                         newPackage = Package()
                         newPackage.deserialize(data)

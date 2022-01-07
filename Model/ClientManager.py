@@ -8,12 +8,14 @@ from Model.Package import Package
 
 
 class ClientManager:
-    activeClients = dict()    #A client is asociated with the lifetime of a socket
-    sessions = dict()         #A socket is associated with a client id
-    server = None
+
 
     def __init__(self, server):
         self.server = server
+        self.server = None
+
+        self.activeClients = dict()  # A client is asociated with the lifetime of a socket
+        self.sessions = dict()  # A socket is associated with a client id
 
     def applyPachage(self, package, mySocket):
         # Daca detectam un pachet de tip CONNECT
@@ -31,10 +33,6 @@ class ClientManager:
             self.ProcessPublish(package, mySocket)
         elif (package.type == PacketType.DISCONNECT):
             self.ProcessDisconect(package, mySocket)
-
-    # This fuction exists in case the client dies before sending a disconect.
-    def disconectClientWithSocket(self, mySocket):
-        del self.activeClients[mySocket]
 
     # Logica de raspuns pentru diferite pachete
 
@@ -105,7 +103,9 @@ class ClientManager:
         ## MEMORIZING SUBSCRIBE TOPICS ##
 
         ourClient = self.activeClients[mySocket]
-        ourClient.associatedSession.addTopics(  package.topicList )
+        ourClient.associatedSession.addTopics( package.topicList )
+
+
         #Here we should probably do important stuffs
         # Here we should probably do important stuffs
 
@@ -121,11 +121,12 @@ class ClientManager:
     def ProcessPublish(self, package, mySocket):
         for client in self.activeClients.values():
             session = client.associatedSession
-            value = (package.topic_name, package.QoS)
+            value = package.topic_name
+
 
             if value  in session.subscribedTopics:
                 data = package.serialize()
-                mySocket.send(data)
+                client.associatedSocket.send(data)
 
 
     def ProcessPINGREQ(self, package, mySocket):
@@ -144,10 +145,14 @@ class ClientManager:
     def disconectClientSafely(self, mySocket ):
         # Will also need to discard any last will messages.
 
-        self.activeClients.pop(mySocket)
 
         # It's really important to remove the socket from the select list before trying to close it.
-        self.server.removeSocketFromList( mySocket)
-        mySocket.close()
+        try:
+            self.activeClients.pop(mySocket)
+
+            self.server.removeSocketFromList( mySocket)
+            mySocket.close()
+        except Exception:
+            pass
 
         print(f"{bcol.OKBLUE}Client successfully disconnected.{bcol.ENDC}")

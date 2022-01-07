@@ -207,7 +207,8 @@ def SUBSCRIBE(package, data):
     topicName = data[startOfTopicPointer:endOfTopicPointer].decode("utf-8")
     topicQoS = data[endOfTopicPointer]
 
-    package.topicList.append((topicName, topicQoS))  # Aici inseram un touple format din numele topicului si QoS-ul
+    package.topicList.append(topicName)  # Aici inseram un touple format din numele topicului si QoS-ul
+    package.topicQoS[topicName] = topicQoS
 
     # Aici ar trebui sa poata citi o lista de topicuri dar cu clientul asta, nu pare sa fie necesar aparent.
     dataPointer = endOfTopicPointer
