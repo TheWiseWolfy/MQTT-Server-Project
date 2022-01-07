@@ -15,6 +15,8 @@ class ClientManager:
         self.activeClients = dict()  # A client is asociated with the lifetime of a socket
         self.persistentSessions = dict()  # A socket is associated with a client id
 
+        self.retainMessages = dict()  # Here we store the retain messages
+
     def applyPachage(self, package, mySocket):
         if mySocket in self.activeClients:
             self.activeClients[mySocket].resetTime()
@@ -36,10 +38,10 @@ class ClientManager:
 
     def keepAliveCheck(self):
         for client in self.activeClients.values():
-            if client.deadline <= time.time() and client.ping_sent is False:
+            if client.deadline  <= time.time() and client.ping_sent is False:
 
                 newPackage = Package()
-                newPackage.type = PacketType.PINGREQ        #Noi trimitem request daca trece prea mult timp ?
+                newPackage.type = PacketType.PINGREQ  # Noi trimitem request daca trece prea mult timp ?
                 data = newPackage.serialize()
                 client.associatedSocket.send(data)
                 client.ping_sent = True
@@ -80,7 +82,7 @@ class ClientManager:
                 sessionAlreadyExisted = True
                 newClient.associatedSession = self.persistentSessions[package.client_id]
 
-        #Calculate the time the client got into the system
+        # Calculate the time the client got into the system
 
         newClient.resetTime()
 
@@ -106,24 +108,28 @@ class ClientManager:
     def ProcessSubscribe(self, package, mySocket):
 
         ## MEMORIZING SUBSCRIBE TOPICS ##
-
         ourClient = self.activeClients[mySocket]
         ourClient.associatedSession.addTopics(package.topicList)
 
-        # Here we should probably do important stuffs
-        # Here we should probably do important stuffs
-
         ## SUBACK ##
-
         newPackage = Package()
         newPackage.type = PacketType.SUBACK
         newPackage.packetIdentifier = package.packetIdentifier
         data = newPackage.serialize()
-
         mySocket.send(data)
+
+        ## RETAIN FUCTIONALITY
+        for topic in package.topicList:  # pentru toate topicurile primite, daca exista retain message pentru unul
+            if topic in self.retainMessages:  # atunci trimite mesajul doar noului subcriber
+                if self.retainMessages[topic][0] != '':   #Cand mesajul e gol, nu mai trimiti mesaje de ratain
+                    self.publishRetainMessage(topic, self.retainMessages[topic], mySocket)
 
     def ProcessPublish(self, package, mySocket):
         self.publishMessage(package.topic_name, package.message)
+
+        ## RETAIN FUCTIONALITY
+        if package.retain:
+            self.retainMessages[package.topic_name] = (package.message,package.QoS)
 
     def ProcessPINGREQ(self, package, mySocket):
         newPackage = Package()
@@ -137,7 +143,7 @@ class ClientManager:
 
     # _________________________UTILITY FUCTIONS_________________________
 
-    def publishMessage(self ,topicName, message ):
+    def publishMessage(self, topicName, message):
         for client in self.activeClients.values():
             session = client.associatedSession
 
@@ -151,8 +157,21 @@ class ClientManager:
                 data = newPackage.serialize()
                 client.associatedSocket.send(data)
 
+
+
+    def publishRetainMessage(self, topicName, retainMessage, mySocket):
+        newPackage = Package()
+        newPackage.type = PacketType.PUBLISH
+        newPackage.topic_name = topicName
+        newPackage.message = retainMessage[0]
+        newPackage.retain = True
+        newPackage.QoS = retainMessage[1]
+
+        data = newPackage.serialize()
+        mySocket.send(data)
+
     def clientSafelyDisconnected(self, mySocket):
-        self.server.removeSocketFromList(mySocket)   #This is important is we don't want the select to go wild
+        self.server.removeSocketFromList(mySocket)  # This is important is we don't want the select to go wild
         mySocket.close()
         self.activeClients.pop(mySocket)
         print(f"{bcol.OKBLUE}Client successfully disconnected.{bcol.ENDC}")
@@ -162,13 +181,10 @@ class ClientManager:
         client = self.activeClients[mySocket]
 
         if client.willFlag:
-            self.publishMessage( client.willTopic, client.willMessage)
+            self.publishMessage(client.willTopic, client.willMessage)
 
-        self.server.removeSocketFromList(mySocket)   #Eradicate the socket from the server list as well
+        self.server.removeSocketFromList(mySocket)  # Eradicate the socket from the server list as well
         mySocket.close()
-        self.activeClients.pop(mySocket)             #Delete the client
-
+        self.activeClients.pop(mySocket)  # Delete the client
 
         print(f"{bcol.WARNING}Client unexpectedly disconnected.{bcol.ENDC}")
-
-
