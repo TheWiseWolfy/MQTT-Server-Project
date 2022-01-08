@@ -2,27 +2,30 @@ import socket
 import threading
 import select
 
-from Model.Tools import bcol
+from Model.Tools import bcol, settings
 from Model.Package import Package, readPackage
 from Model.ClientManager import ClientManager
 
 FORMAT = 'utf-8'
 
-
 class MQTTServer:
-    port = 1883  # Default MQTT Port
 
-    socketList = list()
-    clientManager = None
-
-    running = False  # The status of the server
-
-    serverIP = 0  # Ip used by the server
-    serverSocket = None  # The socket used for listening to new clients
-    serverThread = None
-    receiveThread = None
 
     def __init__(self):
+        settings.debugMode = False
+
+        self.port = 1883  # Default MQTT Port
+
+        self.socketList = list()
+        self.clientManager = None
+
+        self.running = False  # The status of the server
+
+        self.serverIP = 0  # Ip used by the server
+        self.serverSocket = None  # The socket used for listening to new clients
+        self.serverThread = None
+        self.receiveThread = None
+
         # Figure out primary ip of the machine. Will fail if weird network adapters are not turned off.
         hostname = socket.gethostname()
         self.serverIP = socket.gethostbyname(hostname)
@@ -33,7 +36,7 @@ class MQTTServer:
         self.addr = (self.serverIP, self.port)
 
         # Logica interna care manageriaza clienti
-        self.clientManager = ClientManager()
+        self.clientManager = ClientManager(self)
 
         # Here we bind the socket so we can use it for magic
         try:
@@ -73,9 +76,10 @@ class MQTTServer:
                 # Here we add a new client
                 self.socketList.append(conn)
 
+            # this case if for quitting the loop once the socket has been closed because the socket is blocking
             except OSError as err:
                 self.running = False
-                break  # this case if for quitting the loop once the socket has been closed
+                break
             except BaseException as err:
                 print(f"{bcol.WARNING}Unexpected {err=}, {type(err)=} in starting client on adress.{bcol.ENDC}\n")
                 continue
@@ -92,17 +96,15 @@ class MQTTServer:
                 continue
 
             selectedSockets, _, _ = select.select(self.socketList, [], [], 1)
-            self.clientManager.keep_alive_check()
+            self.clientManager.keepAliveCheck()
 
             if selectedSockets:
                 for mySocket in selectedSockets:
-                    data = readPackage(mySocket)
 
-                    if not data:
-                        # cand ajungem aici PRESUPUNEM ca pachetul de disconec a fost primti deja
-                        self.socketList.remove(mySocket)
-                        self.clientManager.disconectClientWithSocket(mySocket)
-                        mySocket.close()
+                    try:
+                        data = readPackage(mySocket)
+                    except Exception as e:
+                        self.clientManager.clientSocketFailed(mySocket)
 
                     else:
                         newPackage = Package()
@@ -112,10 +114,15 @@ class MQTTServer:
                         self.clientManager.applyPachage(newPackage, mySocket)
 
 
+    def removeSocketFromList(self, socket):
+        self.socketList.remove(socket)
+
+
     # This is not stupid, and actually very smart.
     def serverISKill(self):
         self.serverSocket.close()
 
-        for client in self.socketList:
-            client.close()
+        for socket in self.socketList:
+            socket.close()
+
         self.running = False

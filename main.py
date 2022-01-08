@@ -126,6 +126,7 @@ class App:
         if self.running is True:
             App.server.serverISKill()
             self.running = False
+
     @staticmethod
     def add_element(self,str):
         self.GListBox_787.insert(str)
@@ -136,23 +137,14 @@ def main():
     root.mainloop()
     sys.exit()
 
-
-#  while (True):
-#      input1 = input()
-#      if input1 == 's':
-#          server.serverISKill()
-#          break
-
-
 if __name__ == "__main__":
     main()
 
-
 # Server MQTT
-# Vizualizare clienți conectați și abonați, deconectare forțată client
-# Vizualizarea istoricului pentru ultimele 10 valori publicate/topic
-# Autentificare clienți
-# Implementare mecanism KeepAlive
-# Implementare QoS 0,1,2
-# Implementare funcție de reținere (retain) a mesajelor
-# Implementare mecanism LastWill
+# Vizualizare clienți conectați și abonați, deconectare forțată client   -naah
+# Vizualizarea istoricului pentru ultimele 10 valori publicate/topic    -naah
+# Autentificare clienți   -naah
+# Implementare mecanism KeepAlive   -YES
+# Implementare QoS 0,1,2  -naah
+# Implementare funcție de reținere (retain) a mesajelor  -trying my best
+# Implementare mecanism LastWill  -YES

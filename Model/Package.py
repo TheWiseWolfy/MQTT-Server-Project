@@ -6,46 +6,47 @@ from Model.PacketFactory import createPackage
 # https://docs.python.org/3/library/struct.html
 
 class Package:
-    type = None
-
-    #General package fields
-    dup = False  # Duplicate delivery of a PUBLISH Control Packet
-    QoS = None  # PUBLISH Quality of Service
-    retain = False  # PUBLISH Retain flag
-    packetIdentifier = 0
-    client_id = None
-
-    #Subscribe
-    topicList = list()
-
-    #Sessions
-    clearSession = None
-
-    #Last will
-    will_flag = None
-    will_retain = None
-    will_qos = None
-
-    #Authentification
-    username = None
-    password = None
-
-    #Keep alive
-    keep_alive = None
-
-    #Connak flags
-    sessionAlreadyExisted = False
-
-    #Publish
-    message = ""
-    topic_name = ""
-
     def __init__(self):
-        pass
+        self.type = None
+
+        # General package fields
+        self.dup = False  # Duplicate delivery of a PUBLISH Control Packet
+        self.QoS = None  # PUBLISH Quality of Service
+        self.retain = False  # PUBLISH Retain flag
+        self.packetIdentifier = 0
+        self.client_id = ''
+
+        # Subscribe
+        self.topicList = list()
+        self.topicQoS = dict()
+
+        # Sessions
+        self.clearSession = None
+
+        # Last will
+        self.will_flag = None
+        self.will_retain = None
+        self.will_qos = None
+        self.will_message = ''
+        self.will_topic = ''
+
+        # Authentification
+        self.username = None
+        self.password = None
+
+        # Keep alive
+        self.keep_alive = None
+
+        # Connak flags
+        self.sessionAlreadyExisted = False
+
+        # Publish
+        self.message = ""
+        self.topic_name = ""
 
     def deserialize(self, data):
         self.type = ProcessFixedHeader(data)
-        processPackage(self, self.type, data)
+        processPackage(self, data)
 
     def serialize(self):
         return createPackage(self)
@@ -54,19 +55,22 @@ class Package:
 # This fuction can read a pachage from a socket
 def readPackage(socket):
     packageBites = b''
-    packageBites += socket.recv(2)
+    try:
+        packageBites += socket.recv(2)
 
-    if packageBites:
-         remainingLengthOfPackage = packageBites[1]
-    else:
-        return 0
+        if packageBites:
+             remainingLengthOfPackage = packageBites[1]
+        else:
+            return 0
 
-    #The pachage includes packages bigger than 128 bytes but we don't for now.
-    packageBites += socket.recv(remainingLengthOfPackage)
+        #The standard includes packages bigger than 128 bytes but we don't for now.
+        packageBites += socket.recv(remainingLengthOfPackage)
 
-    return packageBites
+        return packageBites
+    except Exception:
+        raise Exception("Socket failed")
 
-# def lengthDecode(socket):
+    # def lengthDecode(socket):
 #     res = 0
 #
 #     multiplier = 1

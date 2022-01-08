@@ -1,5 +1,8 @@
 import enum
 
+class settings:
+    global debugMode
+
 class bcol:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
