@@ -9,6 +9,7 @@ class Client:
 
         self.clientID = clientID
         self.safelyDisconnected = False
+        self.authenticated = False
 
         #Keep alive
         self.keep_alive = keep_alive

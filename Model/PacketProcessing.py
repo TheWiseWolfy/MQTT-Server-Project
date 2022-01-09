@@ -64,37 +64,37 @@ def CONNECT(package, data):
     # QoS
     if b8_int & 24 < 24:
         if b8_int & 24 <= 7:
-            #print("Avem Will QoS=0")
+            # print("Avem Will QoS=0")
             package.will_qos = 0
         elif b8_int & 24 <= 15:
-            #print("Avel Will QoS=1")
+            # print("Avel Will QoS=1")
             package.will_qos = 1
         elif b8_int & 24 <= 23:
-            #print("Avem Will QoS=2")
+            # print("Avem Will QoS=2")
             package.will_qos = 2
     else:
         pass
-        #print("Will QoS invalid(=3)")
+        # print("Will QoS invalid(=3)")
 
     # User name and password flags
     if b8_int & 128 == 128:
-        package.username = True
+        package.username_flag = True
         # print("\nTrebuie sa avem un username in payload")
     else:
-        package.username = False
-        package.password = False  # Here lied a stupid mistake by a stupid man
+        package.username_flag = False
+        package.password_flag = False  # Here lied a stupid mistake by a stupid man
         # print("\nNU trebuie sa avem un username in payload, implicit nici  parola")  # nesigur si aici, randul 525
 
     if b8_int & 64 == 64:
-        package.password = True
+        package.password_flag = True
         # print("\nTrebuie sa avem o parola in payload")
     else:
-        package.password = False
+        package.password_flag = False
         # print("\nNU trebuie sa avem o parola in payload")
 
     package.keep_alive = int.from_bytes(b9 + b10, byteorder='big', signed=False)
 
-    #package.keep_alive = 10   #THOOOOOOOOOOOOOOOOOOOO THIS IS FOR TESTING
+    # package.keep_alive = 10   #THOOOOOOOOOOOOOOOOOOOO THIS IS FOR TESTING
 
     print("Keep alive =", package.keep_alive, "secunde")
 
@@ -102,7 +102,7 @@ def CONNECT(package, data):
     # These fields, if present, MUST appear in the order Client Identifier, Will Topic, Will Message, User Name, Password
     pointer = 12
 
-    b11, b12 = unpack('cc', data[pointer: pointer +2])
+    b11, b12 = unpack('cc', data[pointer: pointer + 2])
     # Client Identifier
     client_id_length = int.from_bytes(b11 + b12, byteorder='big', signed=False)
 
@@ -113,20 +113,39 @@ def CONNECT(package, data):
     pointer = pointer + client_id_length
 
     # Will topic
-    if (package.will_flag):
+    if package.will_flag:
         b13, b14 = unpack('cc', data[pointer: pointer + 2])
         will_topic_length = int.from_bytes(b13 + b14, byteorder='big', signed=False)
         pointer = pointer + 2
-        package.will_topic +=  data[pointer:pointer + will_topic_length].decode("utf-8")
-        print(f'Client will topic: { package.will_topic}')
+        package.will_topic += data[pointer:pointer + will_topic_length].decode("utf-8")
+        print(f'Client will topic: {package.will_topic}')
 
         pointer = pointer + will_topic_length
 
         b15, b16 = unpack('cc', data[pointer: pointer + 2])
         will_message_length = int.from_bytes(b15 + b16, byteorder='big', signed=False)
         pointer = pointer + 2
-        package.will_message +=  data[pointer:pointer + will_message_length].decode("utf-8")
-        print(f'Client will message: { package.will_message}')
+        package.will_message += data[pointer:pointer + will_message_length].decode("utf-8")
+        print(f'Client will message: {package.will_message}')
+
+        pointer = pointer + will_message_length
+
+    # User name
+    if package.username_flag:
+        b17, b18 = unpack('cc', data[pointer: pointer + 2])  # get the size of the username
+        username_length = int.from_bytes(b17 + b18, byteorder='big', signed=False)
+        pointer = pointer + 2
+        package.username += data[pointer:pointer + username_length].decode("utf-8")
+        print(f'Client username: {package.username}')
+
+        pointer = pointer + username_length
+
+    if package.password_flag:
+        b19, b20 = unpack('cc', data[pointer: pointer + 2])  # get the size of the username
+        password_length = int.from_bytes(b19 + b20, byteorder='big', signed=False)
+        pointer = pointer + 2
+        package.password += data[pointer:pointer + password_length].decode("utf-8")
+        print(f'Client password: {package.password}')
 
     # somebody know why this here ?
 

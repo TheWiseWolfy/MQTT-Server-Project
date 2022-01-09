@@ -1,6 +1,7 @@
 import time
 from datetime import datetime
 
+from Model.Autentification import checkPassword
 from Model.Tools import *
 from Model.Client import Client
 from Model.Session import Sesion
@@ -56,6 +57,10 @@ class ClientManager:
         # Presupunem ca nu exista sesiune
         sessionAlreadyExisted = False
 
+
+
+
+
         ## CLIENT HANDDLELING ##
 
         # Clientul este un obiect care exista doar pe parcursul conectiuni !!
@@ -81,6 +86,16 @@ class ClientManager:
             else:  # daca exista deja o sesiune, doar confirmam asta prin connack
                 sessionAlreadyExisted = True
                 newClient.associatedSession = self.persistentSessions[package.client_id]
+
+
+        ##AUTENTIFICATION
+        if package.password_flag and package.username_flag:
+            if checkPassword( package.username , bytes(package.password , 'utf-8')):
+                newClient.authenticated = True;
+                print(f"{bcol.OKBLUE}Authentication successful{bcol.ENDC}")
+            else:
+                #raise RuntimeError("Autentification failed and I don't like that")
+                print(f"{bcol.WARNING}Authentication failed.{bcol.ENDC}")
 
         # Calculate the time the client got into the system
 
@@ -130,6 +145,8 @@ class ClientManager:
         ## RETAIN FUCTIONALITY
         if package.retain:
             self.retainMessages[package.topic_name] = (package.message,package.QoS)
+
+
 
     def ProcessPINGREQ(self, package, mySocket):
         newPackage = Package()

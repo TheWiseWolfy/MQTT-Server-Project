@@ -31,8 +31,10 @@ class Package:
         self.will_topic = ''
 
         # Authentification
-        self.username = None
-        self.password = None
+        self.username_flag = None
+        self.password_flag = None
+        self.username = ''
+        self.password = ''
 
         # Keep alive
         self.keep_alive = None
