@@ -34,6 +34,8 @@ class ClientManager:
             self.ProcessPINGREQ(package, mySocket)
         elif (package.type == PacketType.PINGRESP):
             print(f"{bcol.OKBLUE}Received ping from client.{bcol.ENDC}")
+        elif (package.type == PacketType.UNSUBSCRIBE):
+            self.ProcessUNSUBSCRIBE(package, mySocket)
 
     # Logica de raspuns pentru diferite pachete
 
@@ -56,10 +58,6 @@ class ClientManager:
     def ProcessConnect(self, package, mySocket):
         # Presupunem ca nu exista sesiune
         sessionAlreadyExisted = False
-
-
-
-
 
         ## CLIENT HANDDLELING ##
 
@@ -139,14 +137,16 @@ class ClientManager:
                 if self.retainMessages[topic][0] != '':   #Cand mesajul e gol, nu mai trimiti mesaje de ratain
                     self.publishRetainMessage(topic, self.retainMessages[topic], mySocket)
 
+    def ProcessUNSUBSCRIBE(self, package, mySocket):
+        ourClient = self.activeClients[mySocket]
+        ourClient.associatedSession.removeTopics(package.topicList)
+
     def ProcessPublish(self, package, mySocket):
         self.publishMessage(package.topic_name, package.message)
 
         ## RETAIN FUCTIONALITY
         if package.retain:
             self.retainMessages[package.topic_name] = (package.message,package.QoS)
-
-
 
     def ProcessPINGREQ(self, package, mySocket):
         newPackage = Package()
@@ -172,8 +172,12 @@ class ClientManager:
                 newPackage.QoS = 0
 
                 data = newPackage.serialize()
-                client.associatedSocket.send(data)
 
+                # If a client is subcribe to a topic it was it last will in, it will crash the server unless we ignore it.
+                try:
+                    client.associatedSocket.send(data)
+                except:
+                    pass
 
 
     def publishRetainMessage(self, topicName, retainMessage, mySocket):
@@ -205,3 +209,4 @@ class ClientManager:
         self.activeClients.pop(mySocket)  # Delete the client
 
         print(f"{bcol.WARNING}Client unexpectedly disconnected.{bcol.ENDC}")
+

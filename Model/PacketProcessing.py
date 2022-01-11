@@ -238,8 +238,9 @@ def SUBSCRIBE(package, data):
     topicName = data[startOfTopicPointer:endOfTopicPointer].decode("utf-8")
     topicQoS = data[endOfTopicPointer]
 
-    package.topicList.append(topicName)  # Aici inseram un touple format din numele topicului si QoS-ul
+    package.topicList.append(topicName)
     package.topicQoS[topicName] = topicQoS
+    print(f"My topic is {topicName}")
 
     # Aici ar trebui sa poata citi o lista de topicuri dar cu clientul asta, nu pare sa fie necesar aparent.
     dataPointer = endOfTopicPointer
@@ -247,12 +248,32 @@ def SUBSCRIBE(package, data):
     # end of magic loop
 
 
-def SUBACK(package, data):
+def SUBACK(package, data):  #We only send this one
     pass
 
 
 def UNSUBSCRIBE(package, data):
-    pass
+    formString = 'cccc'
+
+    # Variable header
+    _, _, b1, b2, = unpack(formString, data[0: 4])
+    package.packetIdentifier = int.from_bytes(b1 + b2, "big", signed=False)
+
+    # Payload
+    dataPointer = 4
+
+    topicSize = int.from_bytes(data[dataPointer:dataPointer + 2], "big", signed=False)
+    print(f"My unsubcribe topic size is {topicSize}")
+
+    # in a loop maybe
+    startOfTopicPointer = dataPointer + 2
+    endOfTopicPointer = topicSize + startOfTopicPointer  # Calculam unde se termina sirul de caractere al topicului dupa dataPointer
+
+    topicName = data[startOfTopicPointer:endOfTopicPointer].decode("utf-8")
+    package.topicList.append(topicName)  # Aici inseram un touple format din numele topicului si QoS-ul
+    print(f"My unsubcribe topic is {topicName}")
+
+
 
 
 def UNSUBACK(package, data):

@@ -10,3 +10,6 @@ class Sesion:
 
     def addTopics(self, topics):
         self.subscribedTopics.update( topics )
+
+    def removeTopics(self, topics):
+        self.subscribedTopics = self.subscribedTopics - set(topics)
