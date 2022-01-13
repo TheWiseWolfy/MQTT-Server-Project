@@ -163,10 +163,10 @@ def PUBLISH(package, data):
     fmt = str(topic_name_length + (2 if package.QoS > 0 else 0)) + 'c'
     tuple_pub = unpack(fmt, data[4:4 + topic_name_length + (2 if package.QoS > 0 else 0)])
 
-    package.topic_name = ""
+    package.topicName = ""
     for x in range(0, topic_name_length):
-        package.topic_name += tuple_pub[x].decode("utf-8")
-    print("Topic name:", package.topic_name)
+        package.topicName += tuple_pub[x].decode("utf-8")
+    print("Topic name:", package.topicName)
 
     package.packetIdentifier = ""
     if package.QoS > 0:

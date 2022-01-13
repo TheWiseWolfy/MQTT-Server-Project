@@ -8,10 +8,10 @@ from Model.ClientManager import ClientManager
 
 FORMAT = 'utf-8'
 
+
 class MQTTServer:
 
-
-    def __init__(self):
+    def __init__(self, tree,logs):
         settings.debugMode = False
 
         self.port = 1883  # Default MQTT Port
@@ -25,12 +25,14 @@ class MQTTServer:
         self.serverSocket = None  # The socket used for listening to new clients
         self.serverThread = None
         self.receiveThread = None
+        self.tree = tree
+        self.logs=logs
 
         # Figure out primary ip of the machine. Will fail if weird network adapters are not turned off.
         hostname = socket.gethostname()
         self.serverIP = socket.gethostbyname(hostname)
 
-        print(f"{bcol.OKBLUE}Server has taked IP: {self.serverIP}{bcol.ENDC}")
+        self.logs.insert(0,f"Server has taked IP: {self.serverIP}")
 
         # Here we format the adress
         self.addr = (self.serverIP, self.port)
@@ -50,10 +52,10 @@ class MQTTServer:
             self.receiveThread = threading.Thread(target=self.handleClients, args=())
             self.receiveThread.start()
         except BaseException as err:
-            print(f"{bcol.WARNING} Unexpected {err=}, {type(err)=} is server startup.{bcol.ENDC}")
+            self.logs.insert(0,f"Unexpected {err=}, {type(err)=} is server startup.")
             raise
         else:
-            print(f"Server bound on port {self.port} is starting.")
+            self.logs.insert(0,f"Server bound on port {self.port} is starting.")
 
             self.running = True
 
@@ -62,16 +64,16 @@ class MQTTServer:
         try:
             self.serverSocket.listen()
         except BaseException as err:
-            print(f"{bcol.WARNING}Unexpected {err=}, {type(err)=}.Thread is quitting.{bcol.ENDC}")
+            self.logs.insert(0,f"Unexpected {err=}, {type(err)=}.Thread is quitting.")
             return
 
-        print(f"Server is listening on {self.addr}\n")
+        self.logs.insert(0,f"Server is listening on {self.addr}\n")
 
         # This is the main loop for new clients
         while True:
 
             try:
-                conn, addr = self.serverSocket.accept()  # This fuction is BLOKING
+                conn, addr = self.serverSocket.accept()  # This fuction is BLOCKING
 
                 # Here we add a new client
                 self.socketList.append(conn)
@@ -81,13 +83,13 @@ class MQTTServer:
                 self.running = False
                 break
             except BaseException as err:
-                print(f"{bcol.WARNING}Unexpected {err=}, {type(err)=} in starting client on adress.{bcol.ENDC}\n")
+                self.logs.insert(0,f"Unexpected {err=}, {type(err)=} in connecting client to address.")
                 continue
             else:  # this case runs when no exception has occured
-                print(f"{bcol.OKBLUE}Client on address {addr} successfully started.{bcol.ENDC}")
+                self.logs.insert(0,f"Client on address {addr} successfully connected.")
 
         self.receiveThread.join()
-        print(f"Server has quit.")
+        self.logs.insert(0,"Server has quit.")
 
     def handleClients(self):
 
@@ -111,12 +113,10 @@ class MQTTServer:
                         newPackage.deserialize(data)
 
                         # this is the final objective
-                        self.clientManager.applyPachage(newPackage, mySocket)
-
+                        self.clientManager.applyPackage(newPackage, mySocket)
 
     def removeSocketFromList(self, socket):
         self.socketList.remove(socket)
-
 
     # This is not stupid, and actually very smart.
     def serverISKill(self):
@@ -126,3 +126,4 @@ class MQTTServer:
             socket.close()
 
         self.running = False
+

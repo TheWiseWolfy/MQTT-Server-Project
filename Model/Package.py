@@ -42,7 +42,7 @@ class Package:
 
         # Publish
         self.message = ""
-        self.topic_name = ""
+        self.topicName = ""
 
     def deserialize(self, data):
         self.type = ProcessFixedHeader(data)
