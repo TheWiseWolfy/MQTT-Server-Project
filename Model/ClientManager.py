@@ -87,14 +87,13 @@ class ClientManager:
                 sessionAlreadyExisted = True
                 newClient.associatedSession = self.persistentSessions[package.client_id]
 
-
         ##AUTENTIFICATION
         if package.password_flag and package.username_flag:
-            if checkPassword( package.username , bytes(package.password , 'utf-8')):
+            if checkPassword(package.username, bytes(package.password, 'utf-8')):
                 newClient.authenticated = True;
                 print(f"{bcol.OKBLUE}Authentication successful{bcol.ENDC}")
             else:
-                #raise RuntimeError("Autentification failed and I don't like that")
+                # raise RuntimeError("Autentification failed and I don't like that")
                 print(f"{bcol.WARNING}Authentication failed.{bcol.ENDC}")
 
         # Calculate the time the client got into the system
@@ -147,7 +146,8 @@ class ClientManager:
 
             if topic not in self.topicEntry:
                 self.topicEntry[topic] = list()
-        self.server.logs.insert(0, f"Client {self.activeClients[mySocket].clientID} subscribed to topic {package.topicList}.")
+        self.server.logs.insert(0,
+                                f"Client {self.activeClients[mySocket].clientID} subscribed to topic {package.topicList}.")
 
         self.server.tree.event_generate("<<SUBSCRIBE>>")
 
@@ -200,10 +200,11 @@ class ClientManager:
 
         data = newPackage.serialize()
         mySocket.send(data)
-        self.server.logs.insert(0, f"Received PUBREL from {self.activeClients[mySocket].clientID}, responded with PUBCOMP.")
-
+        self.server.logs.insert(0,
+                                f"Received PUBREL from {self.activeClients[mySocket].clientID}, responded with PUBCOMP.")
 
     def ProcessPUBCOMP(self, package, mySocket):
+
         self.server.logs.insert(0,
                                 f"Received PUBCOMP from {self.activeClients[mySocket].clientID}.")
 
@@ -218,16 +219,16 @@ class ClientManager:
 
         data = newPackage.serialize()
         mySocket.send(data)
-        self.server.logs.insert(0, f"Received PUBREC from {self.activeClients[mySocket].clientID}, responded with PUBREL.")
-
+        self.server.logs.insert(0,
+                                f"Received PUBREC from {self.activeClients[mySocket].clientID}, responded with PUBREL.")
 
     def ProcessPINGREQ(self, package, mySocket):
         newPackage = Package()
         newPackage.type = PacketType.PINGRESP
         data = newPackage.serialize()
         mySocket.send(data)
-        self.server.logs.insert(0, f"Received PINGREQ from {self.activeClients[mySocket].clientID}, responded with PINGRESP.")
-
+        self.server.logs.insert(0,
+                                f"Received PINGREQ from {self.activeClients[mySocket].clientID}, responded with PINGRESP.")
 
     def ProcessDisconnected(self, package, mySocket):
         self.activeClients[mySocket].safelyDisconnected = True
@@ -247,16 +248,13 @@ class ClientManager:
                 newPackage.QoS = qos
 
                 data = newPackage.serialize()
-                client.associatedSocket.send(data)
-        self.server.logs.insert(0,
-                                f"Sent PUBLISH packet with the topic '{topicName}',the message '{message}' and QoS {qos}.")
-
                 # If a client is subcribe to a topic it was it last will in, it will crash the server unless we ignore it.
                 try:
                     client.associatedSocket.send(data)
                 except:
                     pass
-
+        self.server.logs.insert(0,
+                                f"Sent PUBLISH packet with the topic '{topicName}',the message '{message}' and QoS {qos}.")
 
     def publishRetainMessage(self, topicName, retainMessage, mySocket):
         newPackage = Package()
@@ -284,17 +282,17 @@ class ClientManager:
 
         if client.willFlag:
             self.publishMessage(client.willTopic, client.willMessage, client.willQoS)
-            self.server.logs.insert(0, f"Client {self.activeClients[mySocket].clientID} Last Will message:{client.willMessage}.")
+            self.server.logs.insert(0,
+                                    f"Client {self.activeClients[mySocket].clientID} Last Will message:{client.willMessage}.")
 
         self.server.removeSocketFromList(mySocket)  # Eradicate the socket from the server list as well
         mySocket.close()
         self.activeClients.pop(mySocket)  # Delete the client
 
-        self.server.logs.insert(0,f"Client {self.activeClients[mySocket].clientID} unexpectedly disconnected.")
+        self.server.logs.insert(0, f"Client {self.activeClients[mySocket].clientID} unexpectedly disconnected.")
 
     def addInDict(self, dict, key, values):
         if key not in dict:
             dict[key] = list()
         dict[key].append(str(values))
         return dict
-

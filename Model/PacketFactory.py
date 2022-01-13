@@ -19,6 +19,8 @@ def createPackage(package):
         return createPUBACK(package)
     elif package.type == PacketType.PUBREL:
         return createPUBREL(package)
+    elif package.type == PacketType.PUBREC:
+        return createPUBREC(package)
     elif package.type == PacketType.PUBCOMP:
         return createPUBCOMP(package)
 

@@ -1,3 +1,5 @@
+import struct
+
 from Model.Tools import *
 from struct import *
 
@@ -211,7 +213,9 @@ def PUBREC(package, data):
 
 
 def PUBREL(package, data):
-    pass
+    form='cccc'
+    b1, b2, b3, b4 = unpack(form, data[0: 4])
+    package.packetIdentifier = int.from_bytes(b3 + b4,byteorder='big', signed=False)
 
 
 def PUBCOMP(package, data):
