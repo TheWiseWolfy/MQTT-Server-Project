@@ -4,8 +4,6 @@ from Model.Tools import *
 from struct import *
 
 
-
-
 def createPackage(package):
     if package.type == PacketType.CONNACK:
         return createCONNACK(package)
@@ -17,12 +15,18 @@ def createPackage(package):
         return createPINGREQ(package)
     elif package.type == PacketType.PUBLISH:
         return createPUBLISH(package)
+    elif package.type == PacketType.PUBACK:
+        return createPUBACK(package)
+    elif package.type == PacketType.PUBREL:
+        return createPUBREL(package)
+    elif package.type == PacketType.PUBCOMP:
+        return createPUBCOMP(package)
 
 
 def createSUBACK(package):
     format = "ccccc"
 
-    identifier = (package.packetIdentifier).to_bytes(2, 'big')
+    identifier = package.packetIdentifier.to_bytes(2, 'big')
     data = struct.pack(format, b'\x90', b'\x03', identifier[0:1], identifier[1:2], b'\x00')
     return data
 
@@ -63,13 +67,13 @@ def createPUBLISH(package):
         set_bit(b1_int, 3)
 
     # OoS flags
-    if (package.QoS == 2):
+    if package.QoS == 2:
         set_bit(b1_int, 2)
         set_bit(b1_int, 1)
-    elif (package.QoS == 1):
+    elif package.QoS == 1:
         set_bit(b1_int, 1)
     # Retain
-    if (package.retain):
+    if package.retain:
         set_bit(b1_int, 0)
 
     b1 = (b1_int).to_bytes(1, 'big')
@@ -77,11 +81,11 @@ def createPUBLISH(package):
     # Variable Header
 
     # Topic Name
-    topicSize = len(package.topic_name)
-    variableHeader = (topicSize).to_bytes(2, 'big')
-    variableHeader += package.topic_name.encode('UTF-8')
+    topicSize = len(package.topicName)
+    variableHeader = topicSize.to_bytes(2, 'big')
+    variableHeader += package.topicName.encode('UTF-8')
 
-    if (package.QoS > 0):
+    if package.QoS > 0:
         variableHeader += struct.pack("cc", b'\xD1', b'\xD3')  # this is not how it's supposed to be
 
     # The payload being the mssage
@@ -90,9 +94,34 @@ def createPUBLISH(package):
     # Final asembly
     b2 = (len(variableHeader)).to_bytes(1, 'big')
     data = struct.pack("cc", b1, b2)
-    data += variableHeader;
+    data += variableHeader
 
     return data
+
+
+def createPUBACK(package):
+    data = struct.pack("4c", b'\x40', b'\x02', package.packetIdentifier.to_bytes(2, 'big')[0:1],
+                       package.packetIdentifier.to_bytes(2, 'big')[1:2])
+    return data
+
+
+def createPUBREC(package):
+    data = struct.pack("4c", b'\x50', b'\x02', package.packetIdentifier.to_bytes(2, 'big')[0:1],
+                       package.packetIdentifier.to_bytes(2, 'big')[1:2])
+    return data
+
+
+def createPUBREL(package):
+    data = struct.pack("4c", b'\x62', b'\x02', package.packetIdentifier.to_bytes(2, 'big')[0:1],
+                       package.packetIdentifier.to_bytes(2, 'big')[1:2])
+    return data
+
+
+def createPUBCOMP(package):
+    data = struct.pack("4c", b'\x70', b'\x02', package.packetIdentifier.to_bytes(2, 'big')[0:1],
+                       package.packetIdentifier.to_bytes(2, 'big')[1:2])
+    return data
+
 
 def set_bit(value, bit):
     return value | (1 << bit)
