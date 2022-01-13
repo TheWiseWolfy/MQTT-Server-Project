@@ -291,6 +291,7 @@ class ClientManager:
 
         self.server.logs.insert(0, f"Client {self.activeClients[mySocket].clientID} unexpectedly disconnected.")
 
+
     def addInDict(self, dict, key, values):
         if key not in dict:
             dict[key] = list()
