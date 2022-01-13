@@ -1,7 +1,3 @@
-import sys
-
-from Model.Autentification import checkPassword
-from Model.Server import MQTTServer
 import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkFont
@@ -156,10 +152,6 @@ def main():
                     max_nr += 1
                     last_iid += 1
 
-    def GButton_811_command(self):
-        App.server = MQTTServer()
-
-        self.running= True
     tree.bind("<<CONNECT>>", addClient)
     tree.bind("<<PUBLISH>>", addClient)
     tree.bind("<<SUBSCRIBE>>", addClient)
@@ -205,8 +197,8 @@ if __name__ == '__main__':
 # Server MQTT
 # Vizualizare clienți conectați și abonați, deconectare forțată client   -naah
 # Vizualizarea istoricului pentru ultimele 10 valori publicate/topic    -naah
-# Autentificare clienți   -maybe ??
+# Autentificare clienți   -naah
 # Implementare mecanism KeepAlive   -YES
-# Implementare QoS 0,1,2  - help mom I am scared
-# Implementare funcție de reținere (retain) a mesajelor  - YES
+# Implementare QoS 0,1,2  -naah
+# Implementare funcție de reținere (retain) a mesajelor  -trying my best
 # Implementare mecanism LastWill  -YES

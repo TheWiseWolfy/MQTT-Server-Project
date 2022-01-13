@@ -3,7 +3,6 @@ import pickle
 
 hashedPasswords = dict()
 
-
 def checkPassword(username, password):
     file = open("noPasswordsHere.pkl", "rb")
     hashed = pickle.load(file)

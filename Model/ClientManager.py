@@ -37,8 +37,6 @@ class ClientManager:
             self.ProcessDisconnected(package, mySocket)
         elif package.type == PacketType.PINGREQ:
             self.ProcessPINGREQ(package, mySocket)
-        elif (package.type == PacketType.PINGRESP):
-            print(f"{bcol.OKBLUE}Received ping from client.{bcol.ENDC}")
         elif (package.type == PacketType.UNSUBSCRIBE):
             self.ProcessUNSUBSCRIBE(package, mySocket)
         elif package.type == PacketType.PUBREL:
@@ -47,11 +45,10 @@ class ClientManager:
             self.ProcessPUBREC(package, mySocket)
         elif package.type == PacketType.PUBCOMP:
             self.ProcessPUBCOMP(package, mySocket)
-        elif package.type == PacketType.PINGRESP:
+        elif (package.type == PacketType.PINGRESP):
             self.server.logs.insert(0, f"Received ping from client.")
 
     # Logica de raspuns pentru diferite pachete
-
     def keepAliveCheck(self):
         for client in self.activeClients.values():
             if client.ext_deadline <= time.time():
@@ -91,10 +88,13 @@ class ClientManager:
         if package.password_flag and package.username_flag:
             if checkPassword(package.username, bytes(package.password, 'utf-8')):
                 newClient.authenticated = True;
-                print(f"{bcol.OKBLUE}Authentication successful{bcol.ENDC}")
+                # print(f"{bcol.OKBLUE}Authentication successful{bcol.ENDC}")
+                self.server.logs.insert(0, f"Client authentication successful.")
+
             else:
                 # raise RuntimeError("Autentification failed and I don't like that")
-                print(f"{bcol.WARNING}Authentication failed.{bcol.ENDC}")
+                # print(f"{bcol.WARNING}Authentication failed.{bcol.ENDC}")
+                self.server.logs.insert(0, f"Client authentication successful.")
 
         # Calculate the time the client got into the system
 
@@ -126,7 +126,8 @@ class ClientManager:
 
         ## MEMORIZING SUBSCRIBE TOPICS ##
         ourClient = self.activeClients[mySocket]
-        ourClient.associatedSession.addTopics(package.topicList)
+        for topic in package.topicList:
+            ourClient.associatedSession.addTopic(topic, package.topicQoS[topic])
 
         ## SUBACK ##
         newPackage = Package()
@@ -157,6 +158,7 @@ class ClientManager:
 
     def ProcessPublish(self, package, mySocket):
         self.server.logs.insert(0, f"Received PUBLISH packet from {self.activeClients[mySocket].clientID}.")
+
         if package.QoS == 0:
             self.publishMessage(package.topicName, package.message, package.QoS)
 
@@ -193,15 +195,13 @@ class ClientManager:
                 self.savedMessages.pop(key, None)
 
     def ProcessPUBREL(self, package, mySocket):
-
         newPackage = Package()
         newPackage.type = PacketType.PUBCOMP
         newPackage.packetIdentifier = package.packetIdentifier
 
         data = newPackage.serialize()
         mySocket.send(data)
-        self.server.logs.insert(0,
-                                f"Received PUBREL from {self.activeClients[mySocket].clientID}, responded with PUBCOMP.")
+        self.server.logs.insert(0, f"Received PUBREL from {self.activeClients[mySocket].clientID}, responded with PUBCOMP.")
 
     def ProcessPUBCOMP(self, package, mySocket):
 
@@ -238,13 +238,18 @@ class ClientManager:
 
     def publishMessage(self, topicName, message, qos):
         for client in self.activeClients.values():
+
+            # Here we impose the maximum QoS of the subcription
             session = client.associatedSession
 
             if topicName in session.subscribedTopics:
+                finalQoS = min(qos, session.getTopicQoS(topicName))
+
                 newPackage = Package()
                 newPackage.type = PacketType.PUBLISH
                 newPackage.topicName = topicName
                 newPackage.message = message
+
                 newPackage.QoS = qos
 
                 data = newPackage.serialize()
@@ -253,6 +258,7 @@ class ClientManager:
                     client.associatedSocket.send(data)
                 except:
                     pass
+
         self.server.logs.insert(0,
                                 f"Sent PUBLISH packet with the topic '{topicName}',the message '{message}' and QoS {qos}.")
 
@@ -278,19 +284,21 @@ class ClientManager:
 
     def clientSocketFailed(self, mySocket):
 
-        client = self.activeClients[mySocket]
+        try:
+            client = self.activeClients[mySocket]
 
-        if client.willFlag:
-            self.publishMessage(client.willTopic, client.willMessage, client.willQoS)
-            self.server.logs.insert(0,
-                                    f"Client {self.activeClients[mySocket].clientID} Last Will message:{client.willMessage}.")
+            if client.willFlag:
+                self.publishMessage(client.willTopic, client.willMessage, client.willQoS)
+                self.server.logs.insert(0,
+                                        f"Client {self.activeClients[mySocket].clientID} Last Will message:{client.willMessage}.")
 
-        self.server.removeSocketFromList(mySocket)  # Eradicate the socket from the server list as well
-        mySocket.close()
-        self.activeClients.pop(mySocket)  # Delete the client
+            self.server.removeSocketFromList(mySocket)  # Eradicate the socket from the server list as well
+            mySocket.close()
+            self.activeClients.pop(mySocket)  # Delete the client
 
-        self.server.logs.insert(0, f"Client {self.activeClients[mySocket].clientID} unexpectedly disconnected.")
-
+            self.server.logs.insert(0, f"Client {self.activeClients[mySocket].clientID} unexpectedly disconnected.")
+        except:
+            pass
 
     def addInDict(self, dict, key, values):
         if key not in dict:

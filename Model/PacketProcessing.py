@@ -44,7 +44,6 @@ def CONNECT(package, data):
         package.clearSession = True
     else:
         package.clearSession = False
-        raise RuntimeError("Bitul CleanSession este 0")
 
     # Will retain
     if b8_int & 4 == 4:

@@ -6,10 +6,15 @@ class Sesion:
         self.persistent = persistent
         self.clientIdentifier = None
         self.subscribedTopics = set()
+        self.subscribedTopicsQoS = dict()
 
 
-    def addTopics(self, topics):
-        self.subscribedTopics.update( topics )
+    def addTopic(self, topic, QoS):
+        self.subscribedTopics.add(topic)
+        self.subscribedTopicsQoS[topic] = QoS
 
     def removeTopics(self, topics):
         self.subscribedTopics = self.subscribedTopics - set(topics)
+
+    def getTopicQoS(self,topic ):
+        return self.subscribedTopicsQoS[topic]
