@@ -21,6 +21,8 @@ class ClientManager:
         self.savedMessages = dict()  # Here we store saved messages for the QoS system
         self.topicEntry = dict()  # Here we store each topic's messages
 
+        self.unacknowledgedMessages = list()
+
     def applyPackage(self, package, mySocket):
         if mySocket in self.activeClients:
             self.activeClients[mySocket].resetTime()
@@ -245,14 +247,17 @@ class ClientManager:
             if topicName in session.subscribedTopics:
                 finalQoS = min(qos, session.getTopicQoS(topicName))
 
+                if finalQoS == 1:
+                   pass #Petrisor has a small little brain
+
                 newPackage = Package()
                 newPackage.type = PacketType.PUBLISH
                 newPackage.topicName = topicName
                 newPackage.message = message
-
                 newPackage.QoS = qos
 
                 data = newPackage.serialize()
+
                 # If a client is subcribe to a topic it was it last will in, it will crash the server unless we ignore it.
                 try:
                     client.associatedSocket.send(data)
